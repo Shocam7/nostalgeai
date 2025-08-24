@@ -40,72 +40,65 @@ const MainTab = ({ onAnswer, answer }: MainTabProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center text-center max-w-4xl w-full">
+    <div className="flex flex-col h-full w-full">
       
-      {/* Question Text */}
-      <div className="mb-8">
-        <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 mb-4 leading-tight"
-            style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-          What kind of memories would you like to capture?
-        </h2>
-        <p className="text-lg text-slate-600">
-          Select all that apply - you can always change this later
-        </p>
-      </div>
-
-      {/* Memory Classes Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-3xl">
-        {memoryClasses.map((memoryClass) => (
-          <button
-            key={memoryClass.id}
-            onClick={() => toggleClass(memoryClass.id)}
-            className={`
-              relative p-6 rounded-2xl transition-all duration-300 transform hover:scale-105
-              border-2 shadow-lg hover:shadow-xl
-              ${selectedClasses.includes(memoryClass.id)
-                ? 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-500 text-white shadow-amber-200'
-                : 'bg-white border-gray-200 text-slate-700 hover:border-amber-300 hover:bg-amber-50'
-              }
-            `}
-          >
-            {/* SVG Illustration */}
-            <div className="mb-3 h-16 w-16 mx-auto flex items-center justify-center">
-              <img 
-                src={`/svg/${memoryClass.svg}`} 
-                alt={`${memoryClass.name} illustration`} 
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Class Name */}
-            <span className="text-sm font-medium block"
-                  style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-              {memoryClass.name}
-            </span>
-
-            {/* Selection Indicator */}
-            {selectedClasses.includes(memoryClass.id) && (
-              <div className="absolute top-2 right-2">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Selection Counter */}
-      {selectedClasses.length > 0 && (
-        <div className="mt-6 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
-          {selectedClasses.length} {selectedClasses.length === 1 ? 'category' : 'categories'} selected
+      {/* Sticky Header */}
+      <div className="sticky top-0 bg-white z-20 pb-6">
+        <div className="text-center">
+          <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 leading-tight"
+              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            What kind of memories would you like to capture?
+          </h2>
         </div>
-      )}
+      </div>
+
+      {/* Scrollable Memory Classes Grid */}
+      <div className="flex-1 overflow-y-auto pb-6">
+        <div className="grid grid-cols-2 gap-6 w-full max-w-lg mx-auto">
+          {memoryClasses.map((memoryClass) => (
+            <button
+              key={memoryClass.id}
+              onClick={() => toggleClass(memoryClass.id)}
+              className={`
+                relative p-8 rounded-2xl transition-all duration-300 transform hover:scale-105
+                border-2 shadow-lg hover:shadow-xl aspect-square
+                ${selectedClasses.includes(memoryClass.id)
+                  ? 'bg-gradient-to-br from-teal-600 to-cyan-600 border-teal-500 text-white shadow-teal-200'
+                  : 'bg-white border-gray-200 text-slate-700 hover:border-teal-300 hover:bg-teal-50'
+                }
+              `}
+            >
+              {/* SVG Illustration */}
+              <div className="mb-4 h-20 w-20 mx-auto flex items-center justify-center">
+                <img 
+                  src={`/svg/${memoryClass.svg}`} 
+                  alt={`${memoryClass.name} illustration`} 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              {/* Class Name */}
+              <span className="text-base font-medium block"
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                {memoryClass.name}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Selection Counter */}
+        {selectedClasses.length > 0 && (
+          <div className="mt-8 text-center">
+            <div className="inline-block px-4 py-2 bg-teal-100 text-teal-800 rounded-full text-sm font-medium">
+              {selectedClasses.length} {selectedClasses.length === 1 ? 'category' : 'categories'} selected
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Decorative elements */}
       <div className="absolute top-10 left-8 w-3 h-3 bg-amber-400/30 rounded-full animate-pulse"></div>
       <div className="absolute top-32 right-12 w-2 h-2 bg-orange-400/30 rounded-full animate-pulse delay-1000"></div>
-      <div className="absolute bottom-20 left-16 w-4 h-4 bg-yellow-400/30 rounded-full animate-pulse delay-500"></div>
     </div>
   );
 };
