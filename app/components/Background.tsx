@@ -101,7 +101,7 @@ interface EmojiItem {
   animationType: string;
 }
 
-export default function EmojiBackground() {
+export default function Background() {
   const [backgroundEmojis, setBackgroundEmojis] = useState<EmojiItem[]>([]);
 
   useEffect(() => {
