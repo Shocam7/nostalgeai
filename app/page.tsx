@@ -1,5 +1,3 @@
-"use client"
-
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -96,18 +94,7 @@ export default function Home() {
         </svg>
       </div>
 
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&display=swap');
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
+
     </div>
   );
 }
