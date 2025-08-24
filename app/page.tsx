@@ -55,8 +55,8 @@ export default function Home() {
   const [backgroundEmojis, setBackgroundEmojis] = useState<EmojiItem[]>([]);
 
   useEffect(() => {
-    // Generate 50-80 random emojis for the background collage
-    const emojiCount = Math.floor(Math.random() * 30) + 50;
+    // Generate 80-120 random emojis for a denser background collage
+    const emojiCount = Math.floor(Math.random() * 40) + 80;
     const emojis = getRandomEmojis(emojiCount).map((emoji, index) => ({
       emoji,
       id: index,
@@ -146,27 +146,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-amber-600/30 rounded-full blur-xl scale-110 group-hover:scale-125 transition-transform duration-300 -z-10"></div>
         </div>
 
-        {/* Additional Scattered Emojis for Extra Density */}
-        <div className="absolute inset-0 opacity-15">
-          {backgroundEmojis.slice(0, 20).map((item, index) => (
-            <div
-              key={`extra-${index}`}
-              className="absolute animate-pulse"
-              style={{
-                left: `${(item.left + 50) % 100}%`,
-                top: `${(item.top + 30) % 100}%`,
-                fontSize: `${item.size * 0.8}em`,
-                animationDuration: `${item.duration + 2}s`,
-                animationDelay: `${item.delay + 1}s`,
-                transform: 'translate(-50%, -50%)'
-              }}
-            >
-              {item.emoji}
-            </div>
-          ))}
-        </div>
-
       </div>
     </div>
   );
-  }
+}
