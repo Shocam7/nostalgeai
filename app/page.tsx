@@ -1,4 +1,4 @@
-import EmojiBackground from './components/EmojiBackground';
+import Background from './components/Background';
 
 export const metadata = {
   title: "NostalgeAI - Step Down Memory Lane",
@@ -8,8 +8,8 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 relative overflow-hidden">
-      {/* WhatsApp-style Emoji Collage Background */}
-      <EmojiBackground />
+      {/*Background */}
+      <Background />
 
       {/* Logo */}
       <div className="absolute top-8 left-8 z-10">
