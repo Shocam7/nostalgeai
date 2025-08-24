@@ -28,13 +28,43 @@ body {
 /* Custom animations for NostalgeAI */
 @keyframes float {
   0%, 100% { 
-    transform: translateY(0px); 
+    transform: translate(-50%, -50%) translateY(0px) rotate(0deg); 
+  }
+  25% { 
+    transform: translate(-50%, -50%) translateY(-8px) rotate(2deg); 
   }
   50% { 
-    transform: translateY(-10px); 
+    transform: translate(-50%, -50%) translateY(-15px) rotate(-1deg); 
+  }
+  75% { 
+    transform: translate(-50%, -50%) translateY(-5px) rotate(1deg); 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.25;
+  }
+}
+
+@keyframes gentleBob {
+  0%, 100% { 
+    transform: translate(-50%, -50%) translateY(0px) scale(1); 
+  }
+  50% { 
+    transform: translate(-50%, -50%) translateY(-12px) scale(1.05); 
   }
 }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-gentle-bob {
+  animation: gentleBob 4s ease-in-out infinite;
 }
