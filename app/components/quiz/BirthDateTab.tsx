@@ -22,68 +22,11 @@ const BirthDateTab = ({ onAnswer, answer }: BirthDateTabProps) => {
       
       {/* SVG Illustration */}
       <div className="mb-8 w-64 h-64 flex items-center justify-center">
-        {/* Baby SVG - Using inline SVG since we can't import external files */}
-        <svg 
-          width="256" 
-          height="256" 
-          viewBox="0 0 400 300" 
-          className="w-full h-full"
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Baby illustration - simplified version */}
-          <defs>
-            <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fbbf87" />
-              <stop offset="100%" stopColor="#f4a261" />
-            </linearGradient>
-            <linearGradient id="clothesGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#e63946" />
-              <stop offset="100%" stopColor="#d62828" />
-            </linearGradient>
-          </defs>
-          
-          {/* Baby body */}
-          <ellipse cx="200" cy="220" rx="45" ry="35" fill="url(#clothesGradient)" />
-          
-          {/* Baby head */}
-          <circle cx="200" cy="140" r="55" fill="url(#skinGradient)" />
-          
-          {/* Hair */}
-          <path d="M160 105 Q200 85 240 105 Q235 95 200 90 Q165 95 160 105 Z" fill="#8b4513" />
-          
-          {/* Eyes */}
-          <circle cx="185" cy="135" r="4" fill="#2c3e50" />
-          <circle cx="215" cy="135" r="4" fill="#2c3e50" />
-          <circle cx="186" cy="133" r="1.5" fill="white" />
-          <circle cx="216" cy="133" r="1.5" fill="white" />
-          
-          {/* Nose */}
-          <ellipse cx="200" cy="145" rx="3" ry="2" fill="#e9967a" />
-          
-          {/* Mouth */}
-          <path d="M195 155 Q200 158 205 155" stroke="#d2691e" strokeWidth="2" fill="none" />
-          
-          {/* Arms */}
-          <ellipse cx="160" cy="200" rx="12" ry="25" fill="url(#skinGradient)" transform="rotate(-20 160 200)" />
-          <ellipse cx="240" cy="200" rx="12" ry="25" fill="url(#skinGradient)" transform="rotate(20 240 200)" />
-          
-          {/* Hands */}
-          <circle cx="155" cy="220" r="8" fill="url(#skinGradient)" />
-          <circle cx="245" cy="220" r="8" fill="url(#skinGradient)" />
-          
-          {/* Legs */}
-          <ellipse cx="185" cy="255" rx="10" ry="20" fill="url(#skinGradient)" />
-          <ellipse cx="215" cy="255" rx="10" ry="20" fill="url(#skinGradient)" />
-          
-          {/* Feet */}
-          <ellipse cx="185" cy="275" rx="8" ry="5" fill="#2c3e50" />
-          <ellipse cx="215" cy="275" rx="8" ry="5" fill="#2c3e50" />
-          
-          {/* Rosy cheeks */}
-          <circle cx="170" cy="150" r="6" fill="#ff9999" opacity="0.6" />
-          <circle cx="230" cy="150" r="6" fill="#ff9999" opacity="0.6" />
-        </svg>
+        <img 
+          src="undraw_baby_uoep.svg" 
+          alt="Baby illustration" 
+          className="w-full h-full object-contain drop-shadow-lg"
+        />
       </div>
 
       {/* Question Text */}
