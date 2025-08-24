@@ -1,11 +1,25 @@
-import Background from './components/Background';
+// app/page.tsx
+'use client';
 
-export const metadata = {
-  title: "NostalgeAI - Step Down Memory Lane",
-  description: "Explore your memories with AI",
-};
+import { useState } from 'react';
+import Background from './components/Background';
+import Quiz from './components/Quiz';
 
 export default function Home() {
+  const [showQuiz, setShowQuiz] = useState(false);
+
+  const handleDiveIn = () => {
+    setShowQuiz(true);
+  };
+
+  const handleBackToHome = () => {
+    setShowQuiz(false);
+  };
+
+  if (showQuiz) {
+    return <Quiz onBack={handleBackToHome} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 relative overflow-hidden">
       {/*Background */}
@@ -36,8 +50,11 @@ export default function Home() {
 
         {/* Dive In Button */}
         <div className="relative group">
-          <button className="relative bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-xl px-12 py-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out min-w-[200px] backdrop-blur-sm border border-amber-500/20"
-                  style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+          <button 
+            onClick={handleDiveIn}
+            className="relative bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-xl px-12 py-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out min-w-[200px] backdrop-blur-sm border border-amber-500/20"
+            style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}
+          >
             
             {/* Button Background Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
@@ -66,4 +83,4 @@ export default function Home() {
       </div>
     </div>
   );
-                          }
+              }
