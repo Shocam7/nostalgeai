@@ -23,14 +23,14 @@ const BirthDateTab = ({ onAnswer, answer }: BirthDateTabProps) => {
       {/* SVG Illustration */}
       <div className="mb-8 w-64 h-64 flex items-center justify-center">
         <img 
-          src="undraw_baby_uoep.svg" 
+          src="/svg/undraw_baby_uoep.svg" 
           alt="Baby illustration" 
           className="w-full h-full object-contain drop-shadow-lg"
         />
       </div>
 
       {/* Question Text */}
-      <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 dark:text-slate-200 mb-8 leading-tight"
+      <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 mb-8 leading-tight"
           style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
         When were you born?
       </h2>
@@ -44,12 +44,10 @@ const BirthDateTab = ({ onAnswer, answer }: BirthDateTabProps) => {
             onChange={handleDateChange}
             className="
               w-full px-6 py-4 text-lg text-center rounded-2xl 
-              bg-white/80 dark:bg-slate-800/80 
-              border-2 border-amber-300/50 dark:border-amber-600/50
-              focus:border-amber-500 dark:focus:border-amber-400 
+              bg-gray-50 border-2 border-gray-200
+              focus:border-amber-500 focus:bg-white
               focus:outline-none focus:ring-4 focus:ring-amber-500/20
-              text-slate-700 dark:text-slate-200
-              backdrop-blur-sm
+              text-slate-700
               shadow-lg hover:shadow-xl
               transition-all duration-300
               placeholder:text-slate-400
@@ -60,14 +58,14 @@ const BirthDateTab = ({ onAnswer, answer }: BirthDateTabProps) => {
           
           {/* Calendar Icon */}
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
         </div>
         
         {/* Helper text */}
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-3 text-center">
+        <p className="text-sm text-slate-600 mt-3 text-center">
           This helps us personalize your memory journey
         </p>
       </div>
