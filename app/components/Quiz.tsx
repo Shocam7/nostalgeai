@@ -99,7 +99,7 @@ const Quiz = ({ onBack }: QuizProps) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center px-8 relative z-10" style={{ minHeight: 'calc(100vh - 240px)' }}>
+      <div className="flex flex-col px-8 relative z-10 flex-1" style={{ height: 'calc(100vh - 240px)' }}>
         {renderCurrentTab()}
       </div>
 
