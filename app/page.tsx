@@ -24,7 +24,7 @@ export default function Home() {
         
         {/* Central Text */}
         <div className="text-center mb-12 max-w-2xl">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-slate-800 dark:text-slate-200 leading-tight mb-4"
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-slate-800 dark:text-slate-200 leading-tight mb-4"
               style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
             Do you want to step down the{' '}
             <span className="text-amber-700 dark:text-amber-400 font-semibold">
