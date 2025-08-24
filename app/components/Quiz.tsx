@@ -47,7 +47,7 @@ const Quiz = ({ onBack }: QuizProps) => {
     <div className="min-h-screen bg-white relative overflow-hidden">
       
       {/* Header */}
-      <div className="flex items-center justify-between p-6 relative z-10">
+      <div className="flex items-center justify-start p-6 relative z-10">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -57,13 +57,6 @@ const Quiz = ({ onBack }: QuizProps) => {
           </svg>
           <span className="font-medium">Back</span>
         </button>
-        
-        <h1 className="text-2xl sm:text-3xl font-bold text-amber-800" 
-            style={{fontFamily: 'Cinzel, Georgia, serif'}}>
-          NostalgeAI
-        </h1>
-        
-        <div className="w-20"></div> {/* Spacer for center alignment */}
       </div>
 
       {/* Progress Bar */}
@@ -74,18 +67,15 @@ const Quiz = ({ onBack }: QuizProps) => {
             style={{ width: `${((currentTab + 1) / 5) * 100}%` }} // Assuming 5 total tabs
           ></div>
         </div>
-        <p className="text-sm text-amber-700 mt-2 text-center">
-          Step {currentTab + 1} of 5
-        </p>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center px-8 relative z-10 pb-24" style={{ minHeight: 'calc(100vh - 200px)' }}>
+      <div className="flex flex-col items-center justify-center px-8 relative z-10" style={{ minHeight: 'calc(100vh - 240px)' }}>
         {renderCurrentTab()}
       </div>
 
-      {/* Sticky Footer with Next Button */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4 z-20">
+      {/* Fixed Footer with Next Button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4 z-50 safe-area-inset-bottom">
         <div className="max-w-md mx-auto">
           <button 
             onClick={handleNext}
