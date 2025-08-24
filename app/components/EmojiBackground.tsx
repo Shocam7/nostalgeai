@@ -1,27 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import data from '@emoji-mart/data';
 
-// Function to get random emojis from emoji-mart data
-function getRandomEmojis(count: number): string[] {
-  const selected: string[] = [];
-  const categories = Object.values(data.categories);
-  const allEmojis: string[] = [];
+// Generate emojis using Unicode ranges - this covers most common emoji ranges
+function generateEmojiArray(): string[] {
+  const emojis: string[] = [];
   
-  // Collect all emoji native representations from all categories
-  categories.forEach((category: any) => {
-    if (category.emojis) {
-      category.emojis.forEach((emojiId: string) => {
-        const emoji = data.emojis[emojiId];
-        if (emoji && emoji.skins && emoji.skins[0] && emoji.skins[0].native) {
-          allEmojis.push(emoji.skins[0].native);
-        }
-      });
+  // Common emoji Unicode ranges
+  const ranges = [
+    [0x1F600, 0x1F64F], // Emoticons
+    [0x1F300, 0x1F5FF], // Misc Symbols and Pictographs
+    [0x1F680, 0x1F6FF], // Transport and Map
+    [0x1F1E0, 0x1F1FF], // Regional indicator symbols (flags)
+    [0x2600, 0x26FF],   // Misc symbols
+    [0x2700, 0x27BF],   // Dingbats
+    [0x1F900, 0x1F9FF], // Supplemental Symbols and Pictographs
+    [0x1F018, 0x1F270], // Various symbols
+  ];
+  
+  ranges.forEach(([start, end]) => {
+    for (let i = start; i <= end; i++) {
+      const emoji = String.fromCodePoint(i);
+      // Basic check to see if it's likely a valid emoji (not perfect but good enough)
+      if (emoji && emoji.length > 0) {
+        emojis.push(emoji);
+      }
     }
   });
   
-  // Select random emojis
+  // Add some popular multi-codepoint emojis manually
+  const popularEmojis = [
+    "👨‍💻", "👩‍💻", "👨‍🎨", "👩‍🎨", "👨‍🚀", "👩‍🚀", "👨‍⚕️", "👩‍⚕️",
+    "👨‍🌾", "👩‍🌾", "👨‍🍳", "👩‍🍳", "👨‍🎓", "👩‍🎓", "👨‍🎤", "👩‍🎤",
+    "🏳️‍🌈", "🏳️‍⚧️", "👁️‍🗨️", "🐻‍❄️", "❤️‍🔥", "❤️‍🩹", "😮‍💨", "😵‍💫"
+  ];
+  
+  emojis.push(...popularEmojis);
+  
+  return emojis;
+}
+
+// Function to get random emojis
+function getRandomEmojis(count: number): string[] {
+  const allEmojis = generateEmojiArray();
+  const selected: string[] = [];
+  
   for (let i = 0; i < count; i++) {
     const randomIndex = Math.floor(Math.random() * allEmojis.length);
     selected.push(allEmojis[randomIndex]);
@@ -140,4 +163,4 @@ export default function EmojiBackground() {
       ))}
     </div>
   );
-                              }
+  }
