@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import BirthDateTab from './quiz/BirthDateTab';
+import MainTab from './quiz/MainTab';
 
 interface QuizProps {
   onBack: () => void;
@@ -12,8 +13,10 @@ const Quiz = ({ onBack }: QuizProps) => {
   const [currentTab, setCurrentTab] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
+  const totalTabs = 2; // BirthDate + Main tabs (can be increased later)
+
   const handleNext = () => {
-    if (currentTab < 0) { // Will add more tabs later
+    if (currentTab < totalTabs - 1) {
       setCurrentTab(currentTab + 1);
     }
   };
@@ -34,13 +37,39 @@ const Quiz = ({ onBack }: QuizProps) => {
             answer={answers[0]}
           />
         );
+      case 1:
+        return (
+          <MainTab 
+            onAnswer={(answer) => handleAnswer(1, answer)}
+            answer={answers[1]}
+          />
+        );
       default:
         return null;
     }
   };
 
   const isCurrentTabCompleted = () => {
-    return answers[currentTab] !== undefined && answers[currentTab] !== null && answers[currentTab] !== '';
+    const currentAnswer = answers[currentTab];
+    
+    // For BirthDate tab (index 0)
+    if (currentTab === 0) {
+      return currentAnswer !== undefined && currentAnswer !== null && currentAnswer !== '';
+    }
+    
+    // For Main tab (index 1) - at least one memory class should be selected
+    if (currentTab === 1) {
+      return Array.isArray(currentAnswer) && currentAnswer.length > 0;
+    }
+    
+    return false;
+  };
+
+  const getButtonText = () => {
+    if (currentTab === totalTabs - 1) {
+      return 'Complete';
+    }
+    return 'Next';
   };
 
   return (
@@ -64,7 +93,7 @@ const Quiz = ({ onBack }: QuizProps) => {
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-gradient-to-r from-amber-600 to-orange-600 h-2 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${((currentTab + 1) / 5) * 100}%` }} // Assuming 5 total tabs
+            style={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
           ></div>
         </div>
       </div>
@@ -89,7 +118,7 @@ const Quiz = ({ onBack }: QuizProps) => {
             `}
             style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}
           >
-            Next
+            {getButtonText()}
             <svg 
               className="w-5 h-5 ml-2 inline transform transition-transform duration-200" 
               fill="none" 
