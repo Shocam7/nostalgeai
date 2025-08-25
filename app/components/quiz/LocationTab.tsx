@@ -56,7 +56,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
         `https://photon.komoot.io/api/?` +
           new URLSearchParams({
             q: query,
-            limit: '8',
+            limit: '4',
             lang: 'en',
           })
       );
@@ -74,7 +74,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
 
       return data.features
         .filter((item: any) => item.properties && item.properties.name)
-        .slice(0, 6)
+        .slice(0, 4)
         .map((item: any, index: number) => {
           const props = item.properties;
           const coords = item.geometry?.coordinates;
@@ -110,7 +110,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
       .filter(location => 
         location.toLowerCase().includes(query.toLowerCase())
       )
-      .slice(0, 6)
+      .slice(0, 4)
       .map((location, index) => ({
         id: `fallback-${index}`,
         display_name: location
@@ -137,6 +137,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
       if (photonResults.length > 0) {
         setSuggestions(photonResults);
         setShowSuggestions(true);
+        setIsLoading(false); // Stop loading when results are found
         return;
       }
     } catch (error) {
@@ -162,9 +163,10 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
       setError('Search temporarily unavailable. Please type your location manually.');
       setSuggestions([]);
       setShowSuggestions(false);
-    } finally {
-      setIsLoading(false);
     }
+    
+    // Always stop loading at the end
+    setIsLoading(false);
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
