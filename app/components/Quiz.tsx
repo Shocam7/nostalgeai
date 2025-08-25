@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import BirthDateTab from './quiz/BirthDateTab';
+import LocationTab from './quiz/LocationTab';
 import MainTab from './quiz/MainTab';
 
 interface QuizProps {
@@ -15,19 +16,22 @@ const Quiz = ({ onBack }: QuizProps) => {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [startFromBirth, setStartFromBirth] = useState(false);
 
-  const totalTabs = 2; // BirthDate + Main tabs (can be increased later)
+  const totalTabs = 3; // BirthDate + Location + Main tabs
 
   const handleNext = () => {
     if (currentTab === 0) {
-      // Moving from BirthDate to MainTab
+      // Moving from BirthDate to LocationTab
+      setCurrentTab(1);
+    } else if (currentTab === 1) {
+      // Moving from LocationTab to MainTab
       const birthDate = answers[0];
       if (birthDate) {
         const birthYear = new Date(birthDate).getFullYear();
         const startYear = startFromBirth ? birthYear : birthYear + 5;
         setCurrentYear(startYear);
       }
-      setCurrentTab(1);
-    } else if (currentTab === 1) {
+      setCurrentTab(2);
+    } else if (currentTab === 2) {
       // Moving to next year
       if (currentYear) {
         const nextYear = currentYear + 1;
@@ -36,7 +40,7 @@ const Quiz = ({ onBack }: QuizProps) => {
           setCurrentYear(nextYear);
           // Clear previous year's answers to show fresh selection
           const newAnswers = { ...answers };
-          delete newAnswers[1];
+          delete newAnswers[2];
           setAnswers(newAnswers);
         } else {
           // Quiz complete - could navigate to results or next section
@@ -73,9 +77,16 @@ const Quiz = ({ onBack }: QuizProps) => {
         );
       case 1:
         return (
-          <MainTab 
+          <LocationTab 
             onAnswer={(answer) => handleAnswer(1, answer)}
             answer={answers[1]}
+          />
+        );
+      case 2:
+        return (
+          <MainTab 
+            onAnswer={(answer) => handleAnswer(2, answer)}
+            answer={answers[2]}
             currentYear={currentYear}
             birthYear={answers[0] ? new Date(answers[0]).getFullYear() : null}
             onStartFromBirth={handleStartFromBirth}
@@ -95,8 +106,13 @@ const Quiz = ({ onBack }: QuizProps) => {
       return currentAnswer !== undefined && currentAnswer !== null && currentAnswer !== '';
     }
     
-    // For Main tab (index 1) - at least one memory class should be selected
+    // For Location tab (index 1)
     if (currentTab === 1) {
+      return currentAnswer !== undefined && currentAnswer !== null && currentAnswer !== '';
+    }
+    
+    // For Main tab (index 2) - at least one memory class should be selected
+    if (currentTab === 2) {
       return Array.isArray(currentAnswer) && currentAnswer.length > 0;
     }
     
@@ -104,9 +120,9 @@ const Quiz = ({ onBack }: QuizProps) => {
   };
 
   const getButtonText = () => {
-    if (currentTab === 0) {
+    if (currentTab === 0 || currentTab === 1) {
       return 'Next';
-    } else if (currentTab === 1) {
+    } else if (currentTab === 2) {
       const currentYearNow = new Date().getFullYear();
       if (currentYear && currentYear >= currentYearNow) {
         return 'Complete';
@@ -132,10 +148,10 @@ const Quiz = ({ onBack }: QuizProps) => {
         </button>
         
         {/* Current Year Display */}
-        {currentTab === 1 && currentYear && (
+        {currentTab === 2 && currentYear && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <div className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg">
-              <span className="text-lg font-semibold" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            <div className="px-4 py-1">
+              <span className="text-sm text-gray-500" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
                 {currentYear}
               </span>
             </div>
