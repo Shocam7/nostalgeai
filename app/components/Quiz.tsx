@@ -12,12 +12,46 @@ interface QuizProps {
 const Quiz = ({ onBack }: QuizProps) => {
   const [currentTab, setCurrentTab] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [startFromBirth, setStartFromBirth] = useState(false);
 
   const totalTabs = 2; // BirthDate + Main tabs (can be increased later)
 
   const handleNext = () => {
-    if (currentTab < totalTabs - 1) {
-      setCurrentTab(currentTab + 1);
+    if (currentTab === 0) {
+      // Moving from BirthDate to MainTab
+      const birthDate = answers[0];
+      if (birthDate) {
+        const birthYear = new Date(birthDate).getFullYear();
+        const startYear = startFromBirth ? birthYear : birthYear + 5;
+        setCurrentYear(startYear);
+      }
+      setCurrentTab(1);
+    } else if (currentTab === 1) {
+      // Moving to next year
+      if (currentYear) {
+        const nextYear = currentYear + 1;
+        const currentYearNow = new Date().getFullYear();
+        if (nextYear <= currentYearNow) {
+          setCurrentYear(nextYear);
+          // Clear previous year's answers to show fresh selection
+          const newAnswers = { ...answers };
+          delete newAnswers[1];
+          setAnswers(newAnswers);
+        } else {
+          // Quiz complete - could navigate to results or next section
+          console.log('Quiz completed!');
+        }
+      }
+    }
+  };
+
+  const handleStartFromBirth = () => {
+    const birthDate = answers[0];
+    if (birthDate) {
+      const birthYear = new Date(birthDate).getFullYear();
+      setCurrentYear(birthYear);
+      setStartFromBirth(true);
     }
   };
 
@@ -42,6 +76,10 @@ const Quiz = ({ onBack }: QuizProps) => {
           <MainTab 
             onAnswer={(answer) => handleAnswer(1, answer)}
             answer={answers[1]}
+            currentYear={currentYear}
+            birthYear={answers[0] ? new Date(answers[0]).getFullYear() : null}
+            onStartFromBirth={handleStartFromBirth}
+            startFromBirth={startFromBirth}
           />
         );
       default:
@@ -66,8 +104,14 @@ const Quiz = ({ onBack }: QuizProps) => {
   };
 
   const getButtonText = () => {
-    if (currentTab === totalTabs - 1) {
-      return 'Complete';
+    if (currentTab === 0) {
+      return 'Next';
+    } else if (currentTab === 1) {
+      const currentYearNow = new Date().getFullYear();
+      if (currentYear && currentYear >= currentYearNow) {
+        return 'Complete';
+      }
+      return 'Next Year';
     }
     return 'Next';
   };
@@ -76,7 +120,7 @@ const Quiz = ({ onBack }: QuizProps) => {
     <div className="min-h-screen bg-white relative overflow-hidden">
       
       {/* Header */}
-      <div className="flex items-center justify-start p-6 relative z-10">
+      <div className="flex items-center justify-between p-6 relative z-10">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -86,6 +130,17 @@ const Quiz = ({ onBack }: QuizProps) => {
           </svg>
           <span className="font-medium">Back</span>
         </button>
+        
+        {/* Current Year Display */}
+        {currentTab === 1 && currentYear && (
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <div className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg">
+              <span className="text-lg font-semibold" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                {currentYear}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress Bar */}
