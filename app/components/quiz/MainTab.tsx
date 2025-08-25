@@ -6,6 +6,10 @@ import { useState, useMemo } from 'react';
 interface MainTabProps {
   onAnswer: (answer: string[]) => void;
   answer?: string[];
+  currentYear: number | null;
+  birthYear: number | null;
+  onStartFromBirth: () => void;
+  startFromBirth: boolean;
 }
 
 const memoryClasses = [
@@ -63,7 +67,7 @@ const getUserSessionId = (): string => {
   return `default-session-${Math.random().toString(36).substr(2, 9)}`;
 };
 
-const MainTab = ({ onAnswer, answer }: MainTabProps) => {
+const MainTab = ({ onAnswer, answer, currentYear, birthYear, onStartFromBirth, startFromBirth }: MainTabProps) => {
   const [selectedClasses, setSelectedClasses] = useState<string[]>(answer || []);
   
   // Generate consistent gradients for each memory class based on user session
@@ -94,6 +98,24 @@ const MainTab = ({ onAnswer, answer }: MainTabProps) => {
   return (
     <div className="flex flex-col h-full w-full">
       
+      {/* Skip 5 Years Notice */}
+      {currentYear && birthYear && currentYear === birthYear + 5 && !startFromBirth && (
+        <div className="mb-6 text-center">
+          <div className="inline-block px-6 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-sm text-amber-800" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              Yes, we know we skipped 5 years of your life.{' '}
+              <button 
+                onClick={onStartFromBirth}
+                className="underline hover:no-underline font-semibold text-amber-900 hover:text-amber-700 transition-colors"
+              >
+                Click here
+              </button>
+              {' '}if you remember that time.
+            </p>
+          </div>
+        </div>
+      )}
+      
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white z-20 pb-6">
         <div className="text-center">
@@ -101,6 +123,11 @@ const MainTab = ({ onAnswer, answer }: MainTabProps) => {
               style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
             What kind of memories would you like to capture?
           </h2>
+          {currentYear && (
+            <p className="text-lg text-slate-600 mt-2" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              from {currentYear}
+            </p>
+          )}
         </div>
       </div>
 
