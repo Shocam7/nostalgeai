@@ -54,17 +54,13 @@ const seededRandom = (seed: string): number => {
   return Math.abs(hash);
 };
 
-// Get user session ID (generates once per session/page load)
+// Get user session ID (generates fresh on every page load)
 const getUserSessionId = (): string => {
   if (typeof window !== 'undefined') {
-    let sessionId = (window as any).__memoryQuizSessionId;
-    if (!sessionId) {
-      sessionId = Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-      (window as any).__memoryQuizSessionId = sessionId;
-    }
-    return sessionId;
+    // Generate a new session ID every time (no persistence across reloads)
+    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   }
-  return 'default-session';
+  return `default-session-${Math.random().toString(36).substr(2, 9)}`;
 };
 
 const MainTab = ({ onAnswer, answer }: MainTabProps) => {
