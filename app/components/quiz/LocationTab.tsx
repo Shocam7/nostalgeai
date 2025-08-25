@@ -303,7 +303,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
 
         {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-[60] max-h-60 overflow-y-auto">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion.id}
@@ -349,7 +349,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
 
         {/* Error message */}
         {error && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-amber-50 border border-amber-200 rounded-2xl shadow-xl z-50">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-amber-50 border border-amber-200 rounded-2xl shadow-xl z-[60]">
             <div className="px-6 py-4 text-center text-amber-700 text-sm">
               {error}
             </div>
@@ -362,7 +362,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
           !isLoading &&
           !error &&
           location.length > 2 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-[60]">
               <div className="px-6 py-4 text-center text-gray-500 text-sm">
                 No locations found. You can continue typing your location.
               </div>
