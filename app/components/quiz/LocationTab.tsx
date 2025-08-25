@@ -50,44 +50,57 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
     'Stockholm, Sweden'
   ];
 
-  const searchWithNominatim = async (query: string): Promise<LocationSuggestion[]> => {
+  const searchWithPhoton = async (query: string): Promise<LocationSuggestion[]> => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
+        `https://photon.komoot.io/api/?` +
           new URLSearchParams({
             q: query,
-            format: 'json',
-            addressdetails: '1',
             limit: '8',
-            'accept-language': 'en',
-          }),
-        {
-          headers: {
-            'Referer': window.location.href,
-            'User-Agent': 'LocationQuizApp/1.0'
-          }
-        }
+            lang: 'en',
+          })
       );
 
       if (!response.ok) {
-        throw new Error(`Nominatim API error: ${response.status}`);
+        throw new Error(`Photon API error: ${response.status}`);
       }
 
       const data = await response.json();
       
-      return data
-        .filter((item: any) => item.display_name && item.importance > 0.1)
-        .sort((a: any, b: any) => b.importance - a.importance)
+      // Photon returns GeoJSON format
+      if (!data.features || !Array.isArray(data.features)) {
+        return [];
+      }
+
+      return data.features
+        .filter((item: any) => item.properties && item.properties.name)
         .slice(0, 6)
-        .map((item: any) => ({
-          id: item.place_id?.toString() || Math.random().toString(),
-          display_name: item.display_name,
-          lat: item.lat,
-          lon: item.lon,
-          importance: item.importance
-        }));
+        .map((item: any, index: number) => {
+          const props = item.properties;
+          const coords = item.geometry?.coordinates;
+          
+          // Build display name from available properties
+          let displayName = props.name;
+          if (props.city && props.city !== props.name) {
+            displayName += `, ${props.city}`;
+          }
+          if (props.state) {
+            displayName += `, ${props.state}`;
+          }
+          if (props.country) {
+            displayName += `, ${props.country}`;
+          }
+          
+          return {
+            id: props.osm_id?.toString() || `photon-${index}`,
+            display_name: displayName,
+            lat: coords ? coords[1]?.toString() : undefined,
+            lon: coords ? coords[0]?.toString() : undefined,
+            importance: 1.0 - (index * 0.1) // Simple importance based on order
+          };
+        });
     } catch (error) {
-      console.warn('Nominatim API failed:', error);
+      console.warn('Photon API failed:', error);
       throw error;
     }
   };
@@ -118,16 +131,16 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
     setError(null);
 
     try {
-      // Try Nominatim first
-      const nominatimResults = await searchWithNominatim(query);
+      // Try Photon API first
+      const photonResults = await searchWithPhoton(query);
       
-      if (nominatimResults.length > 0) {
-        setSuggestions(nominatimResults);
+      if (photonResults.length > 0) {
+        setSuggestions(photonResults);
         setShowSuggestions(true);
         return;
       }
     } catch (error) {
-      console.warn('Nominatim failed, using fallback:', error);
+      console.warn('Photon API failed, using fallback:', error);
     }
 
     // Fallback to hardcoded suggestions
