@@ -147,7 +147,7 @@ const MainTab = ({ onAnswer, answer, currentYear, birthYear, onStartFromBirth, s
                 `}
               >
                 {/* SVG Illustration */}
-                <div className="mb-4 h-20 w-20 mx-auto flex items-center justify-center">
+                <div className="mb-3 h-24 w-24 mx-auto flex items-center justify-center">
                   <img 
                     src={`/svg/${memoryClass.svg}`} 
                     alt={`${memoryClass.name} illustration`} 
