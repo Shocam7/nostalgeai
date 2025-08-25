@@ -123,11 +123,6 @@ const MainTab = ({ onAnswer, answer, currentYear, birthYear, onStartFromBirth, s
               style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
             What kind of memories would you like to capture?
           </h2>
-          {currentYear && (
-            <p className="text-lg text-slate-600 mt-2" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-              from {currentYear}
-            </p>
-          )}
         </div>
       </div>
 
