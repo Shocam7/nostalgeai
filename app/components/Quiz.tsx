@@ -151,7 +151,7 @@ const Quiz = ({ onBack }: QuizProps) => {
         {currentTab === 2 && currentYear && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <div className="px-4 py-1">
-              <span className="text-sm text-gray-500" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              <span className="text-xl text-gray-500 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
                 {currentYear}
               </span>
             </div>
