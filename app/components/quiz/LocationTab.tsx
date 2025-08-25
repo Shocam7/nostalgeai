@@ -8,33 +8,49 @@ interface LocationTabProps {
   answer?: string;
 }
 
-interface NominatimResult {
-  place_id: number;
+interface LocationSuggestion {
+  id: string;
   display_name: string;
-  lat: string;
-  lon: string;
-  type: string;
-  importance: number;
+  lat?: string;
+  lon?: string;
+  importance?: number;
 }
 
 const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
   const [location, setLocation] = useState(answer || '');
-  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchPlaces = async (query: string) => {
-    if (!query.trim() || query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
+  // Fallback to hardcoded popular locations when API fails
+  const fallbackSuggestions = [
+    'New York, NY, USA',
+    'London, UK',
+    'Paris, France', 
+    'Tokyo, Japan',
+    'Sydney, Australia',
+    'Toronto, Canada',
+    'Berlin, Germany',
+    'Mumbai, India',
+    'São Paulo, Brazil',
+    'Mexico City, Mexico',
+    'Los Angeles, CA, USA',
+    'Chicago, IL, USA',
+    'Houston, TX, USA',
+    'Barcelona, Spain',
+    'Amsterdam, Netherlands',
+    'Singapore',
+    'Dubai, UAE',
+    'Hong Kong',
+    'Buenos Aires, Argentina',
+    'Stockholm, Sweden'
+  ];
 
-    setIsLoading(true);
-
+  const searchWithNominatim = async (query: string): Promise<LocationSuggestion[]> => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
@@ -42,27 +58,95 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
             q: query,
             format: 'json',
             addressdetails: '1',
-            limit: '5',
-            countrycodes: '',
+            limit: '8',
             'accept-language': 'en',
-          })
+          }),
+        {
+          headers: {
+            'Referer': window.location.href,
+            'User-Agent': 'LocationQuizApp/1.0'
+          }
+        }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch suggestions');
+        throw new Error(`Nominatim API error: ${response.status}`);
       }
 
-      const data: NominatimResult[] = await response.json();
-
-      const formattedSuggestions = data
-        .filter((item) => item.display_name && item.importance > 0.1)
-        .sort((a, b) => b.importance - a.importance)
-        .slice(0, 5);
-
-      setSuggestions(formattedSuggestions);
-      setShowSuggestions(true);
+      const data = await response.json();
+      
+      return data
+        .filter((item: any) => item.display_name && item.importance > 0.1)
+        .sort((a: any, b: any) => b.importance - a.importance)
+        .slice(0, 6)
+        .map((item: any) => ({
+          id: item.place_id?.toString() || Math.random().toString(),
+          display_name: item.display_name,
+          lat: item.lat,
+          lon: item.lon,
+          importance: item.importance
+        }));
     } catch (error) {
-      console.error('Error fetching place suggestions:', error);
+      console.warn('Nominatim API failed:', error);
+      throw error;
+    }
+  };
+
+  const searchWithFallback = (query: string): LocationSuggestion[] => {
+    const filtered = fallbackSuggestions
+      .filter(location => 
+        location.toLowerCase().includes(query.toLowerCase())
+      )
+      .slice(0, 6)
+      .map((location, index) => ({
+        id: `fallback-${index}`,
+        display_name: location
+      }));
+
+    return filtered;
+  };
+
+  const searchPlaces = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Try Nominatim first
+      const nominatimResults = await searchWithNominatim(query);
+      
+      if (nominatimResults.length > 0) {
+        setSuggestions(nominatimResults);
+        setShowSuggestions(true);
+        return;
+      }
+    } catch (error) {
+      console.warn('Nominatim failed, using fallback:', error);
+    }
+
+    // Fallback to hardcoded suggestions
+    try {
+      const fallbackResults = searchWithFallback(query);
+      
+      if (fallbackResults.length > 0) {
+        setSuggestions(fallbackResults);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        if (query.length > 2) {
+          setError('No locations found. You can still type your location manually.');
+        }
+      }
+    } catch (error) {
+      console.error('Even fallback failed:', error);
+      setError('Search temporarily unavailable. Please type your location manually.');
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {
@@ -73,6 +157,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
+    setError(null);
 
     // Clear previous timer
     if (debounceRef.current) {
@@ -85,11 +170,12 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
     }, 300);
   };
 
-  const handleSuggestionClick = (suggestion: NominatimResult) => {
+  const handleSuggestionClick = (suggestion: LocationSuggestion) => {
     setLocation(suggestion.display_name);
     onAnswer(suggestion.display_name);
     setShowSuggestions(false);
     setSuggestions([]);
+    setError(null);
   };
 
   const handleInputBlur = () => {
@@ -205,7 +291,7 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
           <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto">
             {suggestions.map((suggestion) => (
               <button
-                key={suggestion.place_id}
+                key={suggestion.id}
                 onClick={() => handleSuggestionClick(suggestion)}
                 className="
                   w-full px-6 py-3 text-left hover:bg-gray-50 transition-colors duration-200
@@ -246,14 +332,24 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
           </div>
         )}
 
+        {/* Error message */}
+        {error && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-amber-50 border border-amber-200 rounded-2xl shadow-xl z-50">
+            <div className="px-6 py-4 text-center text-amber-700 text-sm">
+              {error}
+            </div>
+          </div>
+        )}
+
         {/* No results message */}
         {showSuggestions &&
           suggestions.length === 0 &&
           !isLoading &&
+          !error &&
           location.length > 2 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50">
               <div className="px-6 py-4 text-center text-gray-500 text-sm">
-                No locations found. Try a different search term.
+                No locations found. You can continue typing your location.
               </div>
             </div>
           )}
@@ -273,4 +369,3 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
 };
 
 export default LocationTab;
-        
