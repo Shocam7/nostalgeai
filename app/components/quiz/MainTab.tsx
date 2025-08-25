@@ -1,7 +1,7 @@
 // components/quiz/MainTab.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface MainTabProps {
   onAnswer: (answer: string[]) => void;
@@ -25,8 +25,64 @@ const memoryClasses = [
   { id: 'aesthetic', name: 'Aesthetic', svg: 'nature.svg' }
 ];
 
+// Predefined gradient combinations
+const gradientOptions = [
+  { from: 'from-red-500', to: 'to-pink-600', border: 'border-red-500', shadow: 'shadow-red-200' },
+  { from: 'from-blue-500', to: 'to-indigo-600', border: 'border-blue-500', shadow: 'shadow-blue-200' },
+  { from: 'from-green-500', to: 'to-emerald-600', border: 'border-green-500', shadow: 'shadow-green-200' },
+  { from: 'from-yellow-500', to: 'to-orange-600', border: 'border-yellow-500', shadow: 'shadow-yellow-200' },
+  { from: 'from-purple-500', to: 'to-violet-600', border: 'border-purple-500', shadow: 'shadow-purple-200' },
+  { from: 'from-pink-500', to: 'to-rose-600', border: 'border-pink-500', shadow: 'shadow-pink-200' },
+  { from: 'from-cyan-500', to: 'to-blue-600', border: 'border-cyan-500', shadow: 'shadow-cyan-200' },
+  { from: 'from-lime-500', to: 'to-green-600', border: 'border-lime-500', shadow: 'shadow-lime-200' },
+  { from: 'from-orange-500', to: 'to-red-600', border: 'border-orange-500', shadow: 'shadow-orange-200' },
+  { from: 'from-teal-500', to: 'to-cyan-600', border: 'border-teal-500', shadow: 'shadow-teal-200' },
+  { from: 'from-indigo-500', to: 'to-purple-600', border: 'border-indigo-500', shadow: 'shadow-indigo-200' },
+  { from: 'from-rose-500', to: 'to-pink-600', border: 'border-rose-500', shadow: 'shadow-rose-200' },
+  { from: 'from-emerald-500', to: 'to-teal-600', border: 'border-emerald-500', shadow: 'shadow-emerald-200' },
+  { from: 'from-violet-500', to: 'to-purple-600', border: 'border-violet-500', shadow: 'shadow-violet-200' }
+];
+
+// Function to generate a consistent random number based on a string seed
+const seededRandom = (seed: string): number => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+};
+
+// Get user session ID (generates once per session/page load)
+const getUserSessionId = (): string => {
+  if (typeof window !== 'undefined') {
+    let sessionId = (window as any).__memoryQuizSessionId;
+    if (!sessionId) {
+      sessionId = Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+      (window as any).__memoryQuizSessionId = sessionId;
+    }
+    return sessionId;
+  }
+  return 'default-session';
+};
+
 const MainTab = ({ onAnswer, answer }: MainTabProps) => {
   const [selectedClasses, setSelectedClasses] = useState<string[]>(answer || []);
+  
+  // Generate consistent gradients for each memory class based on user session
+  const memoryGradients = useMemo(() => {
+    const sessionId = getUserSessionId();
+    const gradients: Record<string, typeof gradientOptions[0]> = {};
+    
+    memoryClasses.forEach((memoryClass) => {
+      const seed = `${sessionId}-${memoryClass.id}`;
+      const randomIndex = seededRandom(seed) % gradientOptions.length;
+      gradients[memoryClass.id] = gradientOptions[randomIndex];
+    });
+    
+    return gradients;
+  }, []); // Empty dependency array ensures this only runs once per component mount
 
   const toggleClass = (classId: string) => {
     let newSelection;
@@ -55,41 +111,46 @@ const MainTab = ({ onAnswer, answer }: MainTabProps) => {
       {/* Scrollable Memory Classes Grid */}
       <div className="flex-1 overflow-y-auto pb-6">
         <div className="grid grid-cols-2 gap-6 w-full max-w-lg mx-auto">
-          {memoryClasses.map((memoryClass) => (
-            <button
-              key={memoryClass.id}
-              onClick={() => toggleClass(memoryClass.id)}
-              className={`
-                relative p-8 rounded-2xl transition-all duration-300 transform hover:scale-105
-                border-2 shadow-lg hover:shadow-xl aspect-square
-                ${selectedClasses.includes(memoryClass.id)
-                  ? 'bg-gradient-to-br from-teal-600 to-cyan-600 border-teal-500 text-white shadow-teal-200'
-                  : 'bg-white border-gray-200 text-slate-700 hover:border-teal-300 hover:bg-teal-50'
-                }
-              `}
-            >
-              {/* SVG Illustration */}
-              <div className="mb-4 h-20 w-20 mx-auto flex items-center justify-center">
-                <img 
-                  src={`/svg/${memoryClass.svg}`} 
-                  alt={`${memoryClass.name} illustration`} 
-                  className="w-full h-full object-contain"
-                />
-              </div>
+          {memoryClasses.map((memoryClass) => {
+            const gradient = memoryGradients[memoryClass.id];
+            const isSelected = selectedClasses.includes(memoryClass.id);
+            
+            return (
+              <button
+                key={memoryClass.id}
+                onClick={() => toggleClass(memoryClass.id)}
+                className={`
+                  relative p-8 rounded-2xl transition-all duration-300 transform hover:scale-105
+                  border-2 shadow-lg hover:shadow-xl aspect-square
+                  ${isSelected
+                    ? `bg-gradient-to-br ${gradient.from} ${gradient.to} ${gradient.border} text-white ${gradient.shadow}`
+                    : 'bg-white border-gray-200 text-slate-700 hover:border-gray-300 hover:bg-gray-50'
+                  }
+                `}
+              >
+                {/* SVG Illustration */}
+                <div className="mb-4 h-20 w-20 mx-auto flex items-center justify-center">
+                  <img 
+                    src={`/svg/${memoryClass.svg}`} 
+                    alt={`${memoryClass.name} illustration`} 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
 
-              {/* Class Name */}
-              <span className="text-base font-medium block"
-                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                {memoryClass.name}
-              </span>
-            </button>
-          ))}
+                {/* Class Name */}
+                <span className="text-base font-medium block"
+                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {memoryClass.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Selection Counter */}
         {selectedClasses.length > 0 && (
           <div className="mt-8 text-center">
-            <div className="inline-block px-4 py-2 bg-teal-100 text-teal-800 rounded-full text-sm font-medium">
+            <div className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
               {selectedClasses.length} {selectedClasses.length === 1 ? 'category' : 'categories'} selected
             </div>
           </div>
