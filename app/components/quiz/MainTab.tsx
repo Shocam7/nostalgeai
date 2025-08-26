@@ -61,7 +61,6 @@ const seededRandom = (seed: string): number => {
 // Get user session ID (generates fresh on every page load)
 const getUserSessionId = (): string => {
   if (typeof window !== 'undefined') {
-    // Generate a new session ID every time (no persistence across reloads)
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   }
   return `default-session-${Math.random().toString(36).substr(2, 9)}`;
@@ -96,88 +95,125 @@ const MainTab = ({ onAnswer, answer, currentYear, birthYear, onStartFromBirth, s
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="min-h-full">
       
       {/* Skip 5 Years Notice */}
       {currentYear && birthYear && currentYear === birthYear + 5 && !startFromBirth && (
-        <div className="mb-6 text-center">
-          <div className="inline-block px-6 py-3 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-sm text-amber-800" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-              Yes, we know we skipped 5 years of your life.{' '}
+        <div className="mb-8 text-center">
+          <div className="inline-block px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-sm">
+            <p className="text-amber-800 max-w-md" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              <span className="font-medium">We skipped your first 5 years.</span>
+              {' '}
               <button 
                 onClick={onStartFromBirth}
-                className="underline hover:no-underline font-semibold text-amber-900 hover:text-amber-700 transition-colors"
+                className="underline hover:no-underline font-semibold text-amber-900 hover:text-amber-700 transition-colors duration-200"
               >
                 Click here
               </button>
-              {' '}if you remember that time.
+              {' '}if you have memories from that time.
             </p>
           </div>
         </div>
       )}
       
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white z-20 pb-6">
-        <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 leading-tight"
-              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            What kind of memories would you like to capture?
-          </h2>
-        </div>
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 leading-tight mb-4"
+            style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+          What kind of memories would you like to capture?
+        </h2>
+        <p className="text-slate-600 text-lg max-w-2xl mx-auto"
+           style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+          Select the categories that resonate with your experiences from this year
+        </p>
       </div>
 
-      {/* Scrollable Memory Classes Grid */}
-      <div className="flex-1 overflow-y-auto pb-6">
-        <div className="grid grid-cols-2 gap-6 w-full max-w-lg mx-auto">
-          {memoryClasses.map((memoryClass) => {
-            const gradient = memoryGradients[memoryClass.id];
-            const isSelected = selectedClasses.includes(memoryClass.id);
-            
-            return (
-              <button
-                key={memoryClass.id}
-                onClick={() => toggleClass(memoryClass.id)}
-                className={`
-                  relative p-8 rounded-2xl transition-all duration-300 transform hover:scale-105
-                  border-2 shadow-lg hover:shadow-xl aspect-square
-                  ${isSelected
-                    ? `bg-gradient-to-br ${gradient.from} ${gradient.to} ${gradient.border} text-white ${gradient.shadow}`
-                    : 'bg-white border-gray-200 text-slate-700 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                {/* SVG Illustration */}
-                <div className="mb-3 h-24 w-24 mx-auto flex items-center justify-center">
-                  <img 
-                    src={`/svg/${memoryClass.svg}`} 
-                    alt={`${memoryClass.name} illustration`} 
-                    className="w-full h-full object-contain"
-                  />
+      {/* Memory Classes Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+        {memoryClasses.map((memoryClass) => {
+          const gradient = memoryGradients[memoryClass.id];
+          const isSelected = selectedClasses.includes(memoryClass.id);
+          
+          return (
+            <button
+              key={memoryClass.id}
+              onClick={() => toggleClass(memoryClass.id)}
+              className={`
+                group relative p-6 rounded-2xl transition-all duration-300 transform 
+                border-2 shadow-lg hover:shadow-xl aspect-square
+                ${isSelected
+                  ? `bg-gradient-to-br ${gradient.from} ${gradient.to} ${gradient.border} text-white scale-105 shadow-2xl` 
+                  : 'bg-white border-gray-200 text-slate-700 hover:border-gray-300 hover:bg-gray-50 hover:scale-105'
+                }
+              `}
+            >
+              {/* Selection Indicator */}
+              {isSelected && (
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
+              )}
 
-                {/* Class Name */}
-                <span className="text-base font-medium block"
-                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                  {memoryClass.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+              {/* SVG Illustration */}
+              <div className="mb-4 h-16 w-16 mx-auto flex items-center justify-center">
+                <img 
+                  src={`/svg/${memoryClass.svg}`} 
+                  alt={`${memoryClass.name} illustration`} 
+                  className={`w-full h-full object-contain transition-all duration-300 ${
+                    isSelected ? 'brightness-0 invert' : 'opacity-70 group-hover:opacity-100'
+                  }`}
+                />
+              </div>
 
-        {/* Selection Counter */}
-        {selectedClasses.length > 0 && (
-          <div className="mt-8 text-center">
-            <div className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-              {selectedClasses.length} {selectedClasses.length === 1 ? 'category' : 'categories'} selected
-            </div>
-          </div>
-        )}
+              {/* Class Name */}
+              <span className={`text-sm font-medium block transition-all duration-300 ${
+                isSelected ? 'text-white' : 'text-slate-700 group-hover:text-slate-900'
+              }`}
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                {memoryClass.name}
+              </span>
+
+              {/* Hover effect overlay */}
+              {!isSelected && (
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100/20 to-gray-200/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Decorative elements */}
-      <div className="absolute top-10 left-8 w-3 h-3 bg-amber-400/30 rounded-full animate-pulse"></div>
-      <div className="absolute top-32 right-12 w-2 h-2 bg-orange-400/30 rounded-full animate-pulse delay-1000"></div>
+      {/* Selection Counter */}
+      {selectedClasses.length > 0 && (
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-800 rounded-full text-sm font-medium shadow-sm">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              {selectedClasses.length} {selectedClasses.length === 1 ? 'category' : 'categories'} selected
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {selectedClasses.length === 0 && (
+        <div className="text-center text-gray-500 mt-8">
+          <div className="max-w-md mx-auto">
+            <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <p className="text-lg mb-2" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              Select categories to begin
+            </p>
+            <p className="text-sm opacity-75">
+              Choose the types of memories you'd like to capture from this year
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
