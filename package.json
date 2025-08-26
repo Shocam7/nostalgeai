@@ -12,7 +12,9 @@
     "react-dom": "19.1.0",
     "next": "15.5.0",
     "@emoji-mart/data": "^1.1.2",
-    "framer-motion": "12.23.12"
+    "framer-motion": "12.23.12",
+    "@supabase/supabase-js": "^2.44.4",
+    "pg": "^8.11.3" // only if you want SQL queries
   },
   "devDependencies": {
     "typescript": "^5",
