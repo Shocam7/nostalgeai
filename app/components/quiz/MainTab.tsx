@@ -46,51 +46,10 @@ const MainTab = ({ onAnswer, answer, currentYear, birthYear, onStartFromBirth, s
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full">
       
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white z-10 pb-6 border-b border-gray-100 mb-6">
-        
-        {/* Skip 5 Years Notice */}
-        {currentYear && birthYear && currentYear === birthYear + 5 && !startFromBirth && (
-          <motion.div 
-            className="mb-8 text-center"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="inline-block px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-sm">
-              <p className="text-amber-800 max-w-md" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                <span className="font-medium">We skipped your first 5 years.</span>
-                {' '}
-                <button 
-                  onClick={onStartFromBirth}
-                  className="underline hover:no-underline font-semibold text-amber-900 hover:text-amber-700 transition-colors duration-200"
-                >
-                  Click here
-                </button>
-                {' '}if you have memories from that time.
-              </p>
-            </div>
-          </motion.div>
-        )}
-        
-        {/* Header */}
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 leading-tight"
-              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            What kind of memories would you like to capture?
-          </h2>
-        </motion.div>
-      </div>
-
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Content */}
+      <div>
         
         {/* Memory Classes Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
