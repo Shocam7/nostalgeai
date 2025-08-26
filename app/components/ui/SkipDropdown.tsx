@@ -24,13 +24,21 @@ const SkipDropdown = ({ mode, onSkipMemory, onSkipYear, onSkipEntirely, classNam
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleDefaultAction = () => {
+    if (mode === 'sub' && onSkipMemory) {
+      onSkipMemory();
+    } else {
+      onSkipYear();
+    }
+  };
+
   const handleSkipAction = (action: () => void) => {
     action();
     setIsOpen(false);
   };
 
   const getDefaultLabel = () => {
-    return mode === 'sub' ? 'Skip Options' : 'Skip Options';
+    return mode === 'sub' ? 'Skip Memory' : 'Skip Year';
   };
 
   const menuItems = mode === 'sub' 
@@ -95,25 +103,35 @@ const SkipDropdown = ({ mode, onSkipMemory, onSkipYear, onSkipEntirely, classNam
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm border ${buttonStyles}`}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-        </svg>
-        <span className="font-medium text-sm" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-          {getDefaultLabel()}
-        </span>
-        <svg 
-          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+      <div className="flex items-center gap-1">
+        {/* Main Skip Button */}
+        <button
+          onClick={handleDefaultAction}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm border ${buttonStyles}`}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 9l3 3m0 0l-3 3m3-3H8" />
+          </svg>
+          <span className="font-medium text-sm" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            Skip
+          </span>
+        </button>
+
+        {/* Dropdown Toggle Button */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`p-2 rounded-full transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm border ${buttonStyles}`}
+        >
+          <svg 
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
 
       {/* Dropdown Menu */}
       {isOpen && (
