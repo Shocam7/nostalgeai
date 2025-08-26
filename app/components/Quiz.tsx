@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import BirthDateTab from './quiz/BirthDateTab';
 import LocationTab from './quiz/LocationTab';
 import MainTab from './quiz/MainTab';
@@ -67,7 +68,6 @@ const seededRandom = (seed: string): number => {
 // Get user session ID (generates fresh on every page load)
 const getUserSessionId = (): string => {
   if (typeof window !== 'undefined') {
-    // Generate a new session ID every time (no persistence across reloads)
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   }
   return `default-session-${Math.random().toString(36).substr(2, 9)}`;
@@ -84,9 +84,9 @@ const Quiz = ({ onBack }: QuizProps) => {
   const [inSubTab, setInSubTab] = useState(false);
   const [currentCategories, setCurrentCategories] = useState<string[]>([]);
   const [currentCategoryIndex, setCategoryIndex] = useState(0);
-  const [subTabAnimating, setSubTabAnimating] = useState({ in: false, out: false });
   const [memoryGradients, setMemoryGradients] = useState<Record<string, typeof gradientOptions[0]>>({});
   const [showResults, setShowResults] = useState(false);
+  const [animatingCategoryId, setAnimatingCategoryId] = useState<string | null>(null);
 
   // Initialize gradients
   React.useEffect(() => {
@@ -120,8 +120,12 @@ const Quiz = ({ onBack }: QuizProps) => {
       if (selectedCategories && selectedCategories.length > 0 && !inSubTab) {
         setCurrentCategories(selectedCategories);
         setCategoryIndex(0);
-        setInSubTab(true);
-        setSubTabAnimating({ in: true, out: false });
+        setAnimatingCategoryId(selectedCategories[0]);
+        
+        // Start animation sequence
+        setTimeout(() => {
+          setInSubTab(true);
+        }, 800); // Allow time for the expansion animation
       } else {
         moveToNextYear();
       }
@@ -175,18 +179,13 @@ const Quiz = ({ onBack }: QuizProps) => {
       }));
 
       if (currentCategoryIndex < currentCategories.length - 1) {
-        setSubTabAnimating({ in: false, out: true });
-        setTimeout(() => {
-          setCategoryIndex(prev => prev + 1);
-          setSubTabAnimating({ in: true, out: false });
-        }, 300);
+        const nextCategoryId = currentCategories[currentCategoryIndex + 1];
+        setAnimatingCategoryId(nextCategoryId);
+        setCategoryIndex(prev => prev + 1);
       } else {
-        setSubTabAnimating({ in: false, out: true });
-        setTimeout(() => {
-          setInSubTab(false);
-          setSubTabAnimating({ in: false, out: false });
-          moveToNextYear();
-        }, 300);
+        setInSubTab(false);
+        setAnimatingCategoryId(null);
+        moveToNextYear();
       }
     }
   };
@@ -196,21 +195,15 @@ const Quiz = ({ onBack }: QuizProps) => {
   };
 
   const handleSkipYear = () => {
-    setSubTabAnimating({ in: false, out: true });
-    setTimeout(() => {
-      setInSubTab(false);
-      setSubTabAnimating({ in: false, out: false });
-      moveToNextYear();
-    }, 300);
+    setInSubTab(false);
+    setAnimatingCategoryId(null);
+    moveToNextYear();
   };
 
   const handleSkipEntirely = () => {
-    setSubTabAnimating({ in: false, out: true });
-    setTimeout(() => {
-      setInSubTab(false);
-      setSubTabAnimating({ in: false, out: false });
-      setShowResults(true);
-    }, 300);
+    setInSubTab(false);
+    setAnimatingCategoryId(null);
+    setShowResults(true);
   };
 
   const renderCurrentTab = () => {
@@ -238,6 +231,8 @@ const Quiz = ({ onBack }: QuizProps) => {
             birthYear={answers[0] ? new Date(answers[0]).getFullYear() : null}
             onStartFromBirth={handleStartFromBirth}
             startFromBirth={startFromBirth}
+            memoryGradients={memoryGradients}
+            animatingCategoryId={animatingCategoryId}
           />
         );
       default:
@@ -295,44 +290,53 @@ const Quiz = ({ onBack }: QuizProps) => {
           setMemoryData({});
           setShowResults(false);
           setInSubTab(false);
+          setAnimatingCategoryId(null);
         }}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-white relative overflow-hidden">
       
-      {/* SubTab Overlay - Fixed positioning with proper z-index */}
-      {inSubTab && currentCategories[currentCategoryIndex] && (
-        <div 
-          className={`fixed inset-0 z-[100] transition-all duration-300 ease-out ${
-            subTabAnimating.in ? 'opacity-100 scale-100' : 
-            subTabAnimating.out ? 'opacity-0 scale-95' : 
-            'opacity-100 scale-100'
-          }`}
-          style={{ 
-            transform: subTabAnimating.out ? 'scale(0.95)' : 'scale(1)',
-            transition: 'all 0.3s ease-out'
-          }}
-        >
-          <SubTab
-            categoryId={currentCategories[currentCategoryIndex]}
-            categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
-            gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
-            currentYear={currentYear!}
-            onSave={handleSubTabSave}
-            onSkipMemory={handleSkipMemory}
-            onSkipYear={handleSkipYear}
-            onSkipEntirely={handleSkipEntirely}
-            isAnimatingIn={subTabAnimating.in}
-            isAnimatingOut={subTabAnimating.out}
-          />
-        </div>
-      )}
+      {/* SubTab Overlay with Animation */}
+      <AnimatePresence>
+        {inSubTab && currentCategories[currentCategoryIndex] && (
+          <motion.div
+            layoutId={`memory-${currentCategories[currentCategoryIndex]}`}
+            initial={{ scale: 0.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ 
+              type: "spring", 
+              damping: 25, 
+              stiffness: 200,
+              duration: 0.8
+            }}
+            className="fixed inset-0 z-[100]"
+          >
+            <SubTab
+              categoryId={currentCategories[currentCategoryIndex]}
+              categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
+              gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
+              currentYear={currentYear!}
+              onSave={handleSubTabSave}
+              onSkipMemory={handleSkipMemory}
+              onSkipYear={handleSkipYear}
+              onSkipEntirely={handleSkipEntirely}
+              isAnimatingIn={false}
+              isAnimatingOut={false}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {/* Main Content - Hide when SubTab is active */}
-      <div className={`${inSubTab ? 'hidden' : 'block'}`}>
+      {/* Main Content */}
+      <motion.div 
+        className={`${inSubTab ? 'pointer-events-none' : 'block'}`}
+        animate={{ opacity: inSubTab ? 0.3 : 1, scale: inSubTab ? 0.95 : 1 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 relative z-10">
@@ -349,16 +353,14 @@ const Quiz = ({ onBack }: QuizProps) => {
           {/* Current Year Display */}
           {currentTab === 2 && currentYear && (
             <div className="absolute left-1/2 transform -translate-x-1/2">
-              <div className="px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 rounded-full shadow-sm">
-                <span className="text-xl text-amber-800 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                  {currentYear}
-                </span>
-              </div>
+              <span className="text-xl text-gray-500 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                {currentYear}
+              </span>
             </div>
           )}
 
           {/* Skip Dropdown - only show after LocationTab */}
-          {currentTab > 1 && (
+          {currentTab > 1 && !inSubTab && (
             <SkipDropdown
               mode="main"
               onSkipYear={handleSkipYear}
@@ -370,30 +372,42 @@ const Quiz = ({ onBack }: QuizProps) => {
         {/* Progress Bar */}
         <div className="px-6 mb-8">
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
-            ></div>
+            <motion.div 
+              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+            />
           </div>
         </div>
 
         {/* Main Content Container */}
         <div className="px-6 pb-32">
           <div className="max-w-4xl mx-auto">
-            {renderCurrentTab()}
+            <motion.div
+              key={currentTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              {renderCurrentTab()}
+            </motion.div>
           </div>
         </div>
 
         {/* Fixed Footer with Next Button */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
           <div className="max-w-md mx-auto">
-            <button 
+            <motion.button 
               onClick={handleNext}
               disabled={!isCurrentTabCompleted()}
+              whileHover={isCurrentTabCompleted() ? { scale: 1.02 } : {}}
+              whileTap={isCurrentTabCompleted() ? { scale: 0.98 } : {}}
               className={`
                 w-full px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg
                 ${isCurrentTabCompleted() 
-                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white cursor-pointer hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]' 
+                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white cursor-pointer hover:shadow-xl' 
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }
               `}
@@ -401,25 +415,46 @@ const Quiz = ({ onBack }: QuizProps) => {
             >
               {getButtonText()}
               <svg 
-                className={`w-5 h-5 ml-2 inline transition-transform duration-200 ${
-                  isCurrentTabCompleted() ? 'translate-x-0' : ''
-                }`} 
+                className={`w-5 h-5 ml-2 inline transition-transform duration-200`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Decorative elements - only show when not in SubTab */}
+      {/* Decorative elements */}
       {!inSubTab && (
         <>
-          <div className="absolute top-10 left-8 w-3 h-3 bg-amber-400/30 rounded-full animate-pulse"></div>
-          <div className="absolute top-32 right-12 w-2 h-2 bg-orange-400/30 rounded-full animate-pulse delay-1000"></div>
+          <motion.div 
+            className="absolute top-10 left-8 w-3 h-3 bg-amber-400/30 rounded-full"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div 
+            className="absolute top-32 right-12 w-2 h-2 bg-orange-400/30 rounded-full"
+            animate={{ 
+              scale: [1, 1.3, 1],
+              opacity: [0.3, 0.7, 0.3]
+            }}
+            transition={{ 
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1
+            }}
+          />
         </>
       )}
     </div>
