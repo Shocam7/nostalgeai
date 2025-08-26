@@ -297,7 +297,7 @@ const Quiz = ({ onBack }: QuizProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden flex flex-col">
       
       {/* SubTab Overlay with Animation */}
       <AnimatePresence>
@@ -333,56 +333,102 @@ const Quiz = ({ onBack }: QuizProps) => {
       
       {/* Main Content */}
       <motion.div 
-        className={`${inSubTab ? 'pointer-events-none' : 'block'}`}
+        className={`flex flex-col h-full ${inSubTab ? 'pointer-events-none' : ''}`}
         animate={{ opacity: inSubTab ? 0.3 : 1, scale: inSubTab ? 0.95 : 1 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
       >
         
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 relative z-10">
-          <button 
-            onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="font-medium">Back</span>
-          </button>
+        {/* Fixed Header */}
+        <div className="sticky top-0 bg-white z-10 border-b border-gray-100">
           
-          {/* Current Year Display */}
-          {currentTab === 2 && currentYear && (
-            <div className="absolute left-1/2 transform -translate-x-1/2">
-              <span className="text-xl text-gray-500 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                {currentYear}
-              </span>
+          {/* Top Navigation */}
+          <div className="flex items-center justify-between p-6">
+            <button 
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Back</span>
+            </button>
+            
+            {/* Current Year Display */}
+            {currentTab === 2 && currentYear && (
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <span className="text-xl text-gray-500 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {currentYear}
+                </span>
+              </div>
+            )}
+
+            {/* Skip Dropdown - only show after LocationTab */}
+            {currentTab > 1 && !inSubTab && (
+              <SkipDropdown
+                mode="main"
+                onSkipYear={handleSkipYear}
+                onSkipEntirely={handleSkipEntirely}
+              />
+            )}
+          </div>
+
+          {/* Progress Bar */}
+          <div className="px-6 mb-6">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <motion.div 
+                className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+              />
+            </div>
+          </div>
+
+          {/* Tab Content Header (Skip 5 Years + Title for MainTab) */}
+          {currentTab === 2 && (
+            <div className="px-6 pb-6">
+              {/* Skip 5 Years Notice */}
+              {currentYear && answers[0] && currentYear === new Date(answers[0]).getFullYear() + 5 && !startFromBirth && (
+                <motion.div 
+                  className="mb-6 text-center"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <div className="inline-block px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-sm">
+                    <p className="text-amber-800 max-w-md" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                      <span className="font-medium">We skipped your first 5 years.</span>
+                      {' '}
+                      <button 
+                        onClick={handleStartFromBirth}
+                        className="underline hover:no-underline font-semibold text-amber-900 hover:text-amber-700 transition-colors duration-200"
+                      >
+                        Click here
+                      </button>
+                      {' '}if you have memories from that time.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Main Title */}
+              <motion.div 
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                <h2 className="text-3xl sm:text-4xl font-medium text-slate-800 leading-tight"
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  What kind of memories would you like to capture?
+                </h2>
+              </motion.div>
             </div>
           )}
-
-          {/* Skip Dropdown - only show after LocationTab */}
-          {currentTab > 1 && !inSubTab && (
-            <SkipDropdown
-              mode="main"
-              onSkipYear={handleSkipYear}
-              onSkipEntirely={handleSkipEntirely}
-            />
-          )}
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 mb-8">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <motion.div 
-              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
-              transition={{ duration: 0.7, ease: "easeInOut" }}
-            />
-          </div>
-        </div>
-
-        {/* Main Content Container */}
-        <div className="px-6 pb-32">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto px-6 pb-32">
           <div className="max-w-4xl mx-auto">
             <motion.div
               key={currentTab}
@@ -397,7 +443,7 @@ const Quiz = ({ onBack }: QuizProps) => {
         </div>
 
         {/* Fixed Footer with Next Button */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
+        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
           <div className="max-w-md mx-auto">
             <motion.button 
               onClick={handleNext}
