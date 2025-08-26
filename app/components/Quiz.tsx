@@ -1,20 +1,106 @@
-// components/Quiz.tsx
-'use client';
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import BirthDateTab from './quiz/BirthDateTab';
 import LocationTab from './quiz/LocationTab';
 import MainTab from './quiz/MainTab';
+import SubTab from './quiz/SubTab';
+import SkipDropdown from './ui/SkipDropdown';
+import ResultsPage from './ResultsPage';
 
 interface QuizProps {
   onBack: () => void;
 }
+
+interface MemoryData {
+  [year: number]: {
+    categories: {
+      [categoryId: string]: string[];
+    };
+  };
+}
+
+const memoryClasses = [
+  { id: 'movies', name: 'Movies', svg: 'movie.svg' },
+  { id: 'tv', name: 'TV Shows', svg: 'tv.svg' },
+  { id: 'music', name: 'Music', svg: 'music.svg' },
+  { id: 'goals', name: 'Goals', svg: 'goals.svg' },
+  { id: 'trips', name: 'Trips', svg: 'travel.svg' },
+  { id: 'academics', name: 'Academics', svg: 'academics.svg' },
+  { id: 'games', name: 'Games', svg: 'games.svg' },
+  { id: 'sports', name: 'Sports', svg: 'sports.svg' },
+  { id: 'relations', name: 'Relations', svg: 'relations.svg' },
+  { id: 'hobbies', name: 'Hobbies', svg: 'hobby.svg' },
+  { id: 'purchases', name: 'Purchases', svg: 'buy.svg' },
+  { id: 'achievements', name: 'Achievements', svg: 'achieve.svg' },
+  { id: 'failures', name: 'Failures', svg: 'fail.svg' },
+  { id: 'aesthetic', name: 'Aesthetic', svg: 'nature.svg' }
+];
+
+// Predefined gradient combinations (same as in MainTab)
+const gradientOptions = [
+  { from: 'from-red-500', to: 'to-pink-600', border: 'border-red-500', shadow: 'shadow-red-200' },
+  { from: 'from-blue-500', to: 'to-indigo-600', border: 'border-blue-500', shadow: 'shadow-blue-200' },
+  { from: 'from-green-500', to: 'to-emerald-600', border: 'border-green-500', shadow: 'shadow-green-200' },
+  { from: 'from-yellow-500', to: 'to-orange-600', border: 'border-yellow-500', shadow: 'shadow-yellow-200' },
+  { from: 'from-purple-500', to: 'to-violet-600', border: 'border-purple-500', shadow: 'shadow-purple-200' },
+  { from: 'from-pink-500', to: 'to-rose-600', border: 'border-pink-500', shadow: 'shadow-pink-200' },
+  { from: 'from-cyan-500', to: 'to-blue-600', border: 'border-cyan-500', shadow: 'shadow-cyan-200' },
+  { from: 'from-lime-500', to: 'to-green-600', border: 'border-lime-500', shadow: 'shadow-lime-200' },
+  { from: 'from-orange-500', to: 'to-red-600', border: 'border-orange-500', shadow: 'shadow-orange-200' },
+  { from: 'from-teal-500', to: 'to-cyan-600', border: 'border-teal-500', shadow: 'shadow-teal-200' },
+  { from: 'from-indigo-500', to: 'to-purple-600', border: 'border-indigo-500', shadow: 'shadow-indigo-200' },
+  { from: 'from-rose-500', to: 'to-pink-600', border: 'border-rose-500', shadow: 'shadow-rose-200' },
+  { from: 'from-emerald-500', to: 'to-teal-600', border: 'border-emerald-500', shadow: 'shadow-emerald-200' },
+  { from: 'from-violet-500', to: 'to-purple-600', border: 'border-violet-500', shadow: 'shadow-violet-200' }
+];
+
+// Function to generate a consistent random number based on a string seed
+const seededRandom = (seed: string): number => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+};
+
+// Get user session ID (generates fresh on every page load)
+const getUserSessionId = (): string => {
+  if (typeof window !== 'undefined') {
+    // Generate a new session ID every time (no persistence across reloads)
+    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+  }
+  return `default-session-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 const Quiz = ({ onBack }: QuizProps) => {
   const [currentTab, setCurrentTab] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [startFromBirth, setStartFromBirth] = useState(false);
+  const [memoryData, setMemoryData] = useState<MemoryData>({});
+  
+  // SubTab states
+  const [inSubTab, setInSubTab] = useState(false);
+  const [currentCategories, setCurrentCategories] = useState<string[]>([]);
+  const [currentCategoryIndex, setCategoryIndex] = useState(0);
+  const [subTabAnimating, setSubTabAnimating] = useState({ in: false, out: false });
+  const [memoryGradients, setMemoryGradients] = useState<Record<string, typeof gradientOptions[0]>>({});
+  const [showResults, setShowResults] = useState(false);
+
+  // Initialize gradients (same logic as MainTab)
+  React.useEffect(() => {
+    const sessionId = getUserSessionId();
+    const gradients: Record<string, typeof gradientOptions[0]> = {};
+    
+    memoryClasses.forEach((memoryClass) => {
+      const seed = `${sessionId}-${memoryClass.id}`;
+      const randomIndex = seededRandom(seed) % gradientOptions.length;
+      gradients[memoryClass.id] = gradientOptions[randomIndex];
+    });
+    
+    setMemoryGradients(gradients);
+  }, []);
 
   const totalTabs = 3; // BirthDate + Location + Main tabs
 
@@ -32,20 +118,37 @@ const Quiz = ({ onBack }: QuizProps) => {
       }
       setCurrentTab(2);
     } else if (currentTab === 2) {
-      // Moving to next year
-      if (currentYear) {
-        const nextYear = currentYear + 1;
-        const currentYearNow = new Date().getFullYear();
-        if (nextYear <= currentYearNow) {
-          setCurrentYear(nextYear);
-          // Clear previous year's answers to show fresh selection
-          const newAnswers = { ...answers };
-          delete newAnswers[2];
-          setAnswers(newAnswers);
-        } else {
-          // Quiz complete - could navigate to results or next section
-          console.log('Quiz completed!');
-        }
+      // Moving from MainTab to SubTabs or next year
+      const selectedCategories = answers[2] as string[];
+      if (selectedCategories && selectedCategories.length > 0 && !inSubTab) {
+        // Start SubTabs
+        setCurrentCategories(selectedCategories);
+        setCategoryIndex(0);
+        setInSubTab(true);
+        setSubTabAnimating({ in: true, out: false });
+      } else if (inSubTab) {
+        // This shouldn't happen as SubTabs handle their own navigation
+        return;
+      } else {
+        // No categories selected, move to next year
+        moveToNextYear();
+      }
+    }
+  };
+
+  const moveToNextYear = () => {
+    if (currentYear) {
+      const nextYear = currentYear + 1;
+      const currentYearNow = new Date().getFullYear();
+      if (nextYear <= currentYearNow) {
+        setCurrentYear(nextYear);
+        // Clear previous year's answers to show fresh selection
+        const newAnswers = { ...answers };
+        delete newAnswers[2];
+        setAnswers(newAnswers);
+      } else {
+        // Quiz complete - show results
+        setShowResults(true);
       }
     }
   };
@@ -64,6 +167,64 @@ const Quiz = ({ onBack }: QuizProps) => {
       ...prev,
       [tabIndex]: answer
     }));
+  };
+
+  // SubTab handlers
+  const handleSubTabSave = (memories: string[]) => {
+    if (currentYear && currentCategories[currentCategoryIndex]) {
+      // Save memories for this category and year
+      const categoryId = currentCategories[currentCategoryIndex];
+      setMemoryData(prev => ({
+        ...prev,
+        [currentYear]: {
+          ...prev[currentYear],
+          categories: {
+            ...prev[currentYear]?.categories,
+            [categoryId]: memories
+          }
+        }
+      }));
+
+      // Move to next category or finish year
+      if (currentCategoryIndex < currentCategories.length - 1) {
+        // Animate out current subtab
+        setSubTabAnimating({ in: false, out: true });
+        setTimeout(() => {
+          setCategoryIndex(prev => prev + 1);
+          setSubTabAnimating({ in: true, out: false });
+        }, 250);
+      } else {
+        // All categories done, exit subtabs and move to next year
+        setSubTabAnimating({ in: false, out: true });
+        setTimeout(() => {
+          setInSubTab(false);
+          setSubTabAnimating({ in: false, out: false });
+          moveToNextYear();
+        }, 500);
+      }
+    }
+  };
+
+  const handleSkipMemory = () => {
+    handleSubTabSave([]); // Save empty array for skipped category
+  };
+
+  const handleSkipYear = () => {
+    setSubTabAnimating({ in: false, out: true });
+    setTimeout(() => {
+      setInSubTab(false);
+      setSubTabAnimating({ in: false, out: false });
+      moveToNextYear();
+    }, 500);
+  };
+
+  const handleSkipEntirely = () => {
+    setSubTabAnimating({ in: false, out: true });
+    setTimeout(() => {
+      setInSubTab(false);
+      setSubTabAnimating({ in: false, out: false });
+      setShowResults(true);
+    }, 500);
   };
 
   const renderCurrentTab = () => {
@@ -123,6 +284,10 @@ const Quiz = ({ onBack }: QuizProps) => {
     if (currentTab === 0 || currentTab === 1) {
       return 'Next';
     } else if (currentTab === 2) {
+      const selectedCategories = answers[2] as string[];
+      if (selectedCategories && selectedCategories.length > 0) {
+        return 'Start Memories';
+      }
       const currentYearNow = new Date().getFullYear();
       if (currentYear && currentYear >= currentYearNow) {
         return 'Complete';
@@ -132,8 +297,48 @@ const Quiz = ({ onBack }: QuizProps) => {
     return 'Next';
   };
 
+  // Show results page
+  if (showResults) {
+    const resultsData = Object.entries(memoryData).map(([year, data]) => ({
+      year: parseInt(year),
+      categories: data.categories
+    }));
+
+    return (
+      <ResultsPage
+        memories={resultsData}
+        onBack={() => setShowResults(false)}
+        onStartOver={() => {
+          setCurrentTab(0);
+          setAnswers({});
+          setCurrentYear(null);
+          setStartFromBirth(false);
+          setMemoryData({});
+          setShowResults(false);
+          setInSubTab(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
+      
+      {/* SubTab Overlay */}
+      {inSubTab && currentCategories[currentCategoryIndex] && (
+        <SubTab
+          categoryId={currentCategories[currentCategoryIndex]}
+          categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
+          gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
+          currentYear={currentYear!}
+          onSave={handleSubTabSave}
+          onSkipMemory={handleSkipMemory}
+          onSkipYear={handleSkipYear}
+          onSkipEntirely={handleSkipEntirely}
+          isAnimatingIn={subTabAnimating.in}
+          isAnimatingOut={subTabAnimating.out}
+        />
+      )}
       
       {/* Header */}
       <div className="flex items-center justify-between p-6 relative z-10">
@@ -156,6 +361,15 @@ const Quiz = ({ onBack }: QuizProps) => {
               </span>
             </div>
           </div>
+        )}
+
+        {/* Skip Dropdown - only show after LocationTab */}
+        {currentTab > 1 && (
+          <SkipDropdown
+            mode="main"
+            onSkipYear={handleSkipYear}
+            onSkipEntirely={handleSkipEntirely}
+          />
         )}
       </div>
 
