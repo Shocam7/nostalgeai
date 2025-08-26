@@ -35,7 +35,7 @@ const memoryClasses = [
   { id: 'aesthetic', name: 'Aesthetic', svg: 'nature.svg' }
 ];
 
-// Predefined gradient combinations (same as in MainTab)
+// Predefined gradient combinations
 const gradientOptions = [
   { from: 'from-red-500', to: 'to-pink-600', border: 'border-red-500', shadow: 'shadow-red-200' },
   { from: 'from-blue-500', to: 'to-indigo-600', border: 'border-blue-500', shadow: 'shadow-blue-200' },
@@ -88,7 +88,7 @@ const Quiz = ({ onBack }: QuizProps) => {
   const [memoryGradients, setMemoryGradients] = useState<Record<string, typeof gradientOptions[0]>>({});
   const [showResults, setShowResults] = useState(false);
 
-  // Initialize gradients (same logic as MainTab)
+  // Initialize gradients
   React.useEffect(() => {
     const sessionId = getUserSessionId();
     const gradients: Record<string, typeof gradientOptions[0]> = {};
@@ -106,10 +106,8 @@ const Quiz = ({ onBack }: QuizProps) => {
 
   const handleNext = () => {
     if (currentTab === 0) {
-      // Moving from BirthDate to LocationTab
       setCurrentTab(1);
     } else if (currentTab === 1) {
-      // Moving from LocationTab to MainTab
       const birthDate = answers[0];
       if (birthDate) {
         const birthYear = new Date(birthDate).getFullYear();
@@ -118,19 +116,13 @@ const Quiz = ({ onBack }: QuizProps) => {
       }
       setCurrentTab(2);
     } else if (currentTab === 2) {
-      // Moving from MainTab to SubTabs or next year
       const selectedCategories = answers[2] as string[];
       if (selectedCategories && selectedCategories.length > 0 && !inSubTab) {
-        // Start SubTabs
         setCurrentCategories(selectedCategories);
         setCategoryIndex(0);
         setInSubTab(true);
         setSubTabAnimating({ in: true, out: false });
-      } else if (inSubTab) {
-        // This shouldn't happen as SubTabs handle their own navigation
-        return;
       } else {
-        // No categories selected, move to next year
         moveToNextYear();
       }
     }
@@ -142,12 +134,10 @@ const Quiz = ({ onBack }: QuizProps) => {
       const currentYearNow = new Date().getFullYear();
       if (nextYear <= currentYearNow) {
         setCurrentYear(nextYear);
-        // Clear previous year's answers to show fresh selection
         const newAnswers = { ...answers };
         delete newAnswers[2];
         setAnswers(newAnswers);
       } else {
-        // Quiz complete - show results
         setShowResults(true);
       }
     }
@@ -172,7 +162,6 @@ const Quiz = ({ onBack }: QuizProps) => {
   // SubTab handlers
   const handleSubTabSave = (memories: string[]) => {
     if (currentYear && currentCategories[currentCategoryIndex]) {
-      // Save memories for this category and year
       const categoryId = currentCategories[currentCategoryIndex];
       setMemoryData(prev => ({
         ...prev,
@@ -185,28 +174,25 @@ const Quiz = ({ onBack }: QuizProps) => {
         }
       }));
 
-      // Move to next category or finish year
       if (currentCategoryIndex < currentCategories.length - 1) {
-        // Animate out current subtab
         setSubTabAnimating({ in: false, out: true });
         setTimeout(() => {
           setCategoryIndex(prev => prev + 1);
           setSubTabAnimating({ in: true, out: false });
-        }, 250);
+        }, 300);
       } else {
-        // All categories done, exit subtabs and move to next year
         setSubTabAnimating({ in: false, out: true });
         setTimeout(() => {
           setInSubTab(false);
           setSubTabAnimating({ in: false, out: false });
           moveToNextYear();
-        }, 500);
+        }, 300);
       }
     }
   };
 
   const handleSkipMemory = () => {
-    handleSubTabSave([]); // Save empty array for skipped category
+    handleSubTabSave([]);
   };
 
   const handleSkipYear = () => {
@@ -215,7 +201,7 @@ const Quiz = ({ onBack }: QuizProps) => {
       setInSubTab(false);
       setSubTabAnimating({ in: false, out: false });
       moveToNextYear();
-    }, 500);
+    }, 300);
   };
 
   const handleSkipEntirely = () => {
@@ -224,7 +210,7 @@ const Quiz = ({ onBack }: QuizProps) => {
       setInSubTab(false);
       setSubTabAnimating({ in: false, out: false });
       setShowResults(true);
-    }, 500);
+    }, 300);
   };
 
   const renderCurrentTab = () => {
@@ -262,17 +248,10 @@ const Quiz = ({ onBack }: QuizProps) => {
   const isCurrentTabCompleted = () => {
     const currentAnswer = answers[currentTab];
     
-    // For BirthDate tab (index 0)
-    if (currentTab === 0) {
+    if (currentTab === 0 || currentTab === 1) {
       return currentAnswer !== undefined && currentAnswer !== null && currentAnswer !== '';
     }
     
-    // For Location tab (index 1)
-    if (currentTab === 1) {
-      return currentAnswer !== undefined && currentAnswer !== null && currentAnswer !== '';
-    }
-    
-    // For Main tab (index 2) - at least one memory class should be selected
     if (currentTab === 2) {
       return Array.isArray(currentAnswer) && currentAnswer.length > 0;
     }
@@ -322,99 +301,127 @@ const Quiz = ({ onBack }: QuizProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white relative">
       
-      {/* SubTab Overlay */}
+      {/* SubTab Overlay - Fixed positioning with proper z-index */}
       {inSubTab && currentCategories[currentCategoryIndex] && (
-        <SubTab
-          categoryId={currentCategories[currentCategoryIndex]}
-          categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
-          gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
-          currentYear={currentYear!}
-          onSave={handleSubTabSave}
-          onSkipMemory={handleSkipMemory}
-          onSkipYear={handleSkipYear}
-          onSkipEntirely={handleSkipEntirely}
-          isAnimatingIn={subTabAnimating.in}
-          isAnimatingOut={subTabAnimating.out}
-        />
-      )}
-      
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 relative z-10">
-        <button 
-          onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
+        <div 
+          className={`fixed inset-0 z-[100] transition-all duration-300 ease-out ${
+            subTabAnimating.in ? 'opacity-100 scale-100' : 
+            subTabAnimating.out ? 'opacity-0 scale-95' : 
+            'opacity-100 scale-100'
+          }`}
+          style={{ 
+            transform: subTabAnimating.out ? 'scale(0.95)' : 'scale(1)',
+            transition: 'all 0.3s ease-out'
+          }}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="font-medium">Back</span>
-        </button>
-        
-        {/* Current Year Display */}
-        {currentTab === 2 && currentYear && (
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <div className="px-4 py-1">
-              <span className="text-xl text-gray-500 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                {currentYear}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Skip Dropdown - only show after LocationTab */}
-        {currentTab > 1 && (
-          <SkipDropdown
-            mode="main"
+          <SubTab
+            categoryId={currentCategories[currentCategoryIndex]}
+            categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
+            gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
+            currentYear={currentYear!}
+            onSave={handleSubTabSave}
+            onSkipMemory={handleSkipMemory}
             onSkipYear={handleSkipYear}
             onSkipEntirely={handleSkipEntirely}
+            isAnimatingIn={subTabAnimating.in}
+            isAnimatingOut={subTabAnimating.out}
           />
-        )}
-      </div>
-
-      {/* Progress Bar */}
-      <div className="px-6 mb-8">
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-amber-600 to-orange-600 h-2 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
-          ></div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col px-8 relative z-10 flex-1" style={{ height: 'calc(100vh - 240px)' }}>
-        {renderCurrentTab()}
-      </div>
-
-      {/* Fixed Footer with Next Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4 z-50 safe-area-inset-bottom">
-        <div className="max-w-md mx-auto">
+      )}
+      
+      {/* Main Content - Hide when SubTab is active */}
+      <div className={`${inSubTab ? 'hidden' : 'block'}`}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 relative z-10">
           <button 
-            onClick={handleNext}
-            disabled={!isCurrentTabCompleted()}
-            className={`
-              w-full px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg
-              ${isCurrentTabCompleted() 
-                ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white cursor-pointer hover:shadow-xl transform hover:scale-[1.02]' 
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }
-            `}
-            style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}
+            onClick={onBack}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-amber-700 hover:text-amber-800 transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            {getButtonText()}
-            <svg 
-              className="w-5 h-5 ml-2 inline transform transition-transform duration-200" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
+            <span className="font-medium">Back</span>
           </button>
+          
+          {/* Current Year Display */}
+          {currentTab === 2 && currentYear && (
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <div className="px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 rounded-full shadow-sm">
+                <span className="text-xl text-amber-800 font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {currentYear}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Skip Dropdown - only show after LocationTab */}
+          {currentTab > 1 && (
+            <SkipDropdown
+              mode="main"
+              onSkipYear={handleSkipYear}
+              onSkipEntirely={handleSkipEntirely}
+            />
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-6 mb-8">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${((currentTab + 1) / totalTabs) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Main Content Container */}
+        <div className="px-6 pb-32">
+          <div className="max-w-4xl mx-auto">
+            {renderCurrentTab()}
+          </div>
+        </div>
+
+        {/* Fixed Footer with Next Button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
+          <div className="max-w-md mx-auto">
+            <button 
+              onClick={handleNext}
+              disabled={!isCurrentTabCompleted()}
+              className={`
+                w-full px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg
+                ${isCurrentTabCompleted() 
+                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white cursor-pointer hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }
+              `}
+              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}
+            >
+              {getButtonText()}
+              <svg 
+                className={`w-5 h-5 ml-2 inline transition-transform duration-200 ${
+                  isCurrentTabCompleted() ? 'translate-x-0' : ''
+                }`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Decorative elements - only show when not in SubTab */}
+      {!inSubTab && (
+        <>
+          <div className="absolute top-10 left-8 w-3 h-3 bg-amber-400/30 rounded-full animate-pulse"></div>
+          <div className="absolute top-32 right-12 w-2 h-2 bg-orange-400/30 rounded-full animate-pulse delay-1000"></div>
+        </>
+      )}
     </div>
   );
 };
