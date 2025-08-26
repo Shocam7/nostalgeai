@@ -297,7 +297,7 @@ const Quiz = ({ onBack }: QuizProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-white overflow-hidden">
       
       {/* SubTab Overlay with Animation */}
       <AnimatePresence>
@@ -333,13 +333,13 @@ const Quiz = ({ onBack }: QuizProps) => {
       
       {/* Main Content */}
       <motion.div 
-        className={`flex flex-col h-full ${inSubTab ? 'pointer-events-none' : ''}`}
+        className={`h-full flex flex-col ${inSubTab ? 'pointer-events-none' : ''}`}
         animate={{ opacity: inSubTab ? 0.3 : 1, scale: inSubTab ? 0.95 : 1 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
       >
         
         {/* Fixed Header */}
-        <div className="sticky top-0 bg-white z-10 border-b border-gray-100">
+        <div className="flex-none bg-white z-10 border-b border-gray-100">
           
           {/* Top Navigation */}
           <div className="flex items-center justify-between p-6">
@@ -428,8 +428,8 @@ const Quiz = ({ onBack }: QuizProps) => {
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-6 pb-32">
-          <div className="max-w-4xl mx-auto">
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="max-w-4xl mx-auto py-6">
             <motion.div
               key={currentTab}
               initial={{ opacity: 0, y: 20 }}
@@ -443,7 +443,7 @@ const Quiz = ({ onBack }: QuizProps) => {
         </div>
 
         {/* Fixed Footer with Next Button */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
+        <div className="flex-none bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 z-40">
           <div className="max-w-md mx-auto">
             <motion.button 
               onClick={handleNext}
