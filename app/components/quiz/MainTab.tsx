@@ -22,7 +22,7 @@ const memoryClasses = [
   { id: 'trips', name: 'Trips', svg: 'travel.svg' },
   { id: 'academics', name: 'Academics', svg: 'academics.svg' },
   { id: 'games', name: 'Video Games', svg: 'games.svg' },
-  { id: 'toys', name: 'Toys', svg: 'toys.svg' },
+  { id: 'toys', name: 'Toys', svg: 'toy.svg' },
   { id: 'sports', name: 'Sports', svg: 'sports.svg' },
   { id: 'relations', name: 'Relations', svg: 'relations.svg' },
   { id: 'hobbies', name: 'Hobbies', svg: 'hobby.svg' },
