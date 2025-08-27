@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SkipDropdown from '../ui/SkipDropdown';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../../lib/supabaseClient';
 
 interface SubTabProps {
   categoryId: string;
