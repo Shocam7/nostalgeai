@@ -14,7 +14,7 @@
     "@emoji-mart/data": "^1.1.2",
     "framer-motion": "12.23.12",
     "@supabase/supabase-js": "^2.44.4",
-    "pg": "^8.11.3" // only if you want SQL queries
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "typescript": "^5",
