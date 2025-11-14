@@ -18,6 +18,7 @@ const memoryClasses = [
   { id: 'movies', name: 'Movies', svg: 'movie.svg' },
   { id: 'tv', name: 'TV Shows', svg: 'tv.svg' },
   { id: 'music', name: 'Music', svg: 'music.svg' },
+  { id: 'toons', name: 'Toons', svg: 'toons.svg' }, // NEW CATEGORY
   { id: 'goals', name: 'Goals', svg: 'goals.svg' },
   { id: 'trips', name: 'Trips', svg: 'travel.svg' },
   { id: 'academics', name: 'Academics', svg: 'academics.svg' },
