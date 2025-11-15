@@ -22,6 +22,7 @@ interface MemoryData {
 const memoryClasses = [
   { id: 'movies', name: 'Movies', svg: 'movie.svg' },
   { id: 'tv', name: 'TV Shows', svg: 'tv.svg' },
+  { id: 'toons', name: 'Toons', svg: 'toons.svg' },
   { id: 'music', name: 'Music', svg: 'music.svg' },
   { id: 'goals', name: 'Goals', svg: 'goals.svg' },
   { id: 'trips', name: 'Trips', svg: 'travel.svg' },
