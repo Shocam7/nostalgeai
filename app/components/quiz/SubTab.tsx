@@ -2,12 +2,6 @@ import React, { useState, useEffect } from 'react';
 import SkipDropdown from '../ui/SkipDropdown';
 import { supabase } from '../../../lib/supabaseClient';
 
-// Define MemoryItem interface - must match Quiz.tsx
-export interface MemoryItem {
-  title: string;
-  clipUrl?: string;
-}
-
 interface SubTabProps {
   categoryId: string;
   categoryName: string;
@@ -18,7 +12,7 @@ interface SubTabProps {
     shadow: string;
   };
   currentYear: number;
-  onSave: (memories: MemoryItem[]) => void;
+  onSave: (memories: string[]) => void;
   onSkipMemory: () => void;
   onSkipYear: () => void;
   onSkipEntirely: () => void;
@@ -33,9 +27,10 @@ interface DatabaseItem {
   popularity?: number;
   people?: string[];
   preferred_age?: string;
-  video_clips?: string[]; // Array of video clip URLs
+  // Add other fields as needed for different categories
 }
 
+// Updated prompts for selection-based interface
 const selectionPrompts = {
   movies: [
     "Which movies did you watch this year?",
@@ -60,13 +55,8 @@ const selectionPrompts = {
     "Select your gaming highlights:",
     "Pick the games you enjoyed most:",
     "Choose the games that defined your year in"
-  ],
-  toons: [
-    "Which cartoons did you watch?",
-    "Select the toons you remember:",
-    "Pick your favorite animated shows:",
-    "Choose the cartoons from"
   ]
+  // Add more categories as needed
 };
 
 const SubTab = ({ 
@@ -100,13 +90,12 @@ const SubTab = ({
         setLoading(true);
         setError(null);
 
-        // Map category names to table names
+        // Map category names to table names (adjust as needed)
         const tableName = categoryId === 'movies' ? 'movies' : 
                          categoryId === 'tv' ? 'tv_shows' :
                          categoryId === 'music' ? 'songs' :
                          categoryId === 'games' ? 'games' :
-                         categoryId === 'toons' ? 'toons' :
-                         categoryId;
+                         categoryId; // fallback to categoryId
 
         const { data, error: fetchError } = await supabase
           .from(tableName)
@@ -145,21 +134,10 @@ const SubTab = ({
     }
   };
 
-  // Function to randomly select a clip from an item's clips
-  const selectRandomClip = (clips?: string[]): string | undefined => {
-    if (!clips || clips.length === 0) return undefined;
-    const randomIndex = Math.floor(Math.random() * clips.length);
-    return clips[randomIndex];
-  };
-
-  const handleSave = async () => {
-    // Convert selected items to MemoryItem objects with random clip selection
-    const memoryItems: MemoryItem[] = selectedItems.map(item => ({
-      title: item.title,
-      clipUrl: selectRandomClip(item.video_clips)
-    }));
-    
-    onSave(memoryItems);
+  const handleSave = () => {
+    // Convert selected items to strings for the onSave callback
+    const memoryStrings = selectedItems.map(item => item.title);
+    onSave(memoryStrings);
   };
 
   const isItemSelected = (item: DatabaseItem) => {
@@ -243,8 +221,6 @@ const SubTab = ({
             <div className="max-w-2xl mx-auto space-y-3 pb-6">
               {filteredItems.map((item, index) => {
                 const selected = isItemSelected(item);
-                const hasClips = item.video_clips && item.video_clips.length > 0;
-                
                 return (
                   <div 
                     key={item.id} 
@@ -276,8 +252,8 @@ const SubTab = ({
                               style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
                             {item.title}
                           </h3>
-                          <div className="flex items-center gap-3 mt-1">
-                            {item.popularity && (
+                          {item.popularity && (
+                            <div className="flex items-center gap-2 mt-1">
                               <div className="flex items-center">
                                 <svg className="w-4 h-4 text-yellow-300 fill-current" viewBox="0 0 24 24">
                                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
@@ -286,18 +262,8 @@ const SubTab = ({
                                   {item.popularity}/10
                                 </span>
                               </div>
-                            )}
-                            {hasClips && (
-                              <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full">
-                                <svg className="w-3 h-3 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                <span className="text-white/80 text-xs font-medium">
-                                  {item.video_clips?.length} clips
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
