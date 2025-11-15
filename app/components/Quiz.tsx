@@ -11,15 +11,10 @@ interface QuizProps {
   onBack: () => void;
 }
 
-interface MemoryItem {
-  title: string;
-  clipUrl?: string;
-}
-
 interface MemoryData {
   [year: number]: {
     categories: {
-      [categoryId: string]: MemoryItem[];
+      [categoryId: string]: string[];
     };
   };
 }
@@ -28,7 +23,6 @@ const memoryClasses = [
   { id: 'movies', name: 'Movies', svg: 'movie.svg' },
   { id: 'tv', name: 'TV Shows', svg: 'tv.svg' },
   { id: 'music', name: 'Music', svg: 'music.svg' },
-  { id: 'toons', name: 'Toons', svg: 'toons.svg' }, // NEW CATEGORY
   { id: 'goals', name: 'Goals', svg: 'goals.svg' },
   { id: 'trips', name: 'Trips', svg: 'travel.svg' },
   { id: 'academics', name: 'Academics', svg: 'academics.svg' },
@@ -66,7 +60,7 @@ const seededRandom = (seed: string): number => {
   for (let i = 0; i < seed.length; i++) {
     const char = seed.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+    hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
 };
@@ -108,7 +102,7 @@ const Quiz = ({ onBack }: QuizProps) => {
     setMemoryGradients(gradients);
   }, []);
 
-  const totalTabs = 3;
+  const totalTabs = 3; // BirthDate + Location + Main tabs
 
   const handleNext = () => {
     if (currentTab === 0) {
@@ -128,9 +122,10 @@ const Quiz = ({ onBack }: QuizProps) => {
         setCategoryIndex(0);
         setAnimatingCategoryId(selectedCategories[0]);
         
+        // Start animation sequence
         setTimeout(() => {
           setInSubTab(true);
-        }, 800);
+        }, 800); // Allow time for the expansion animation
       } else {
         moveToNextYear();
       }
@@ -168,8 +163,8 @@ const Quiz = ({ onBack }: QuizProps) => {
     }));
   };
 
-  // SubTab handlers - Updated to handle MemoryItem objects
-  const handleSubTabSave = (memories: MemoryItem[]) => {
+  // SubTab handlers
+  const handleSubTabSave = (memories: string[]) => {
     if (currentYear && currentCategories[currentCategoryIndex]) {
       const categoryId = currentCategories[currentCategoryIndex];
       setMemoryData(prev => ({
@@ -276,6 +271,7 @@ const Quiz = ({ onBack }: QuizProps) => {
     return 'Next';
   };
 
+  // Show results page
   if (showResults) {
     const resultsData = Object.entries(memoryData).map(([year, data]) => ({
       year: parseInt(year),
@@ -366,7 +362,7 @@ const Quiz = ({ onBack }: QuizProps) => {
               </div>
             )}
 
-            {/* Skip Dropdown */}
+            {/* Skip Dropdown - only show after LocationTab */}
             {currentTab > 1 && !inSubTab && (
               <SkipDropdown
                 mode="main"
@@ -388,9 +384,10 @@ const Quiz = ({ onBack }: QuizProps) => {
             </div>
           </div>
 
-          {/* Tab Content Header */}
+          {/* Tab Content Header (Skip 5 Years + Title for MainTab) */}
           {currentTab === 2 && (
             <div className="px-6 pb-6">
+              {/* Skip 5 Years Notice */}
               {currentYear && answers[0] && currentYear === new Date(answers[0]).getFullYear() + 5 && !startFromBirth && (
                 <motion.div 
                   className="mb-6 text-center"
@@ -414,6 +411,7 @@ const Quiz = ({ onBack }: QuizProps) => {
                 </motion.div>
               )}
               
+              {/* Main Title */}
               <motion.div 
                 className="text-center"
                 initial={{ opacity: 0, y: 20 }}
