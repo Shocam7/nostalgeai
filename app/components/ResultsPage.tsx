@@ -16,6 +16,7 @@ interface ResultsPageProps {
 const memoryClassNames = {
   movies: 'Movies',
   tv: 'TV Shows',
+  toons: 'Toons',
   music: 'Music',
   goals: 'Goals',
   trips: 'Trips',
