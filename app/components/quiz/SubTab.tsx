@@ -56,6 +56,10 @@ const selectionPrompts = {
   ]
 };
 
+// TMDB API configuration
+const TMDB_API_KEY = '773be65506318f1d2770bfb578f0fda1';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
 const SubTab = ({ 
   categoryId, 
   categoryName, 
@@ -90,30 +94,70 @@ const SubTab = ({
   // Check if we're in movies category for card interface
   const isMovieCategory = categoryId === 'movies';
 
-  // Fetch items from database
+  // Fetch movies from TMDB API
+  const fetchMoviesFromTMDB = async (year: number) => {
+    try {
+      const movies: DatabaseItem[] = [];
+      const totalPages = 5; // Fetch first 5 pages (100 movies)
+
+      for (let page = 1; page <= totalPages; page++) {
+        const response = await fetch(
+          `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&primary_release_year=${year}&sort_by=popularity.desc&page=${page}&language=en-US`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch movies from TMDB');
+        }
+
+        const data = await response.json();
+        
+        const formattedMovies = data.results.map((movie: any) => ({
+          id: movie.id,
+          title: movie.title,
+          year: year,
+          popularity: movie.vote_average ? Math.round(movie.vote_average * 10) / 10 : undefined
+        }));
+
+        movies.push(...formattedMovies);
+      }
+
+      return movies;
+    } catch (error) {
+      console.error('Error fetching from TMDB:', error);
+      throw error;
+    }
+  };
+
+  // Fetch items from database or TMDB
   useEffect(() => {
     const fetchItems = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const tableName = categoryId === 'movies' ? 'movies' : 
-                         categoryId === 'tv' ? 'tv_shows' :
-                         categoryId === 'music' ? 'songs' :
-                         categoryId === 'games' ? 'games' :
-                         categoryId;
+        if (categoryId === 'movies') {
+          // Fetch from TMDB API for movies
+          const movies = await fetchMoviesFromTMDB(currentYear);
+          setAvailableItems(movies);
+        } else {
+          // Fetch from database for other categories
+          const tableName = categoryId === 'tv' ? 'tv_shows' :
+                           categoryId === 'music' ? 'songs' :
+                           categoryId === 'games' ? 'games' :
+                           categoryId;
 
-        const { data, error: fetchError } = await supabase
-          .from(tableName)
-          .select('*')
-          .eq('year', currentYear)
-          .order('popularity', { ascending: false });
+          const { data, error: fetchError } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('year', currentYear)
+            .order('popularity', { ascending: false });
 
-        if (fetchError) {
-          throw fetchError;
+          if (fetchError) {
+            throw fetchError;
+          }
+
+          setAvailableItems(data || []);
         }
-
-        setAvailableItems(data || []);
       } catch (err) {
         console.error('Error fetching items:', err);
         setError('Failed to load options. Please try again.');
