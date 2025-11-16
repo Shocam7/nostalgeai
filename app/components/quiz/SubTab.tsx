@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SkipDropdown from '../ui/SkipDropdown';
 import { supabase } from '../../../lib/supabaseClient';
 
@@ -27,10 +27,8 @@ interface DatabaseItem {
   popularity?: number;
   people?: string[];
   preferred_age?: string;
-  // Add other fields as needed for different categories
 }
 
-// Updated prompts for selection-based interface
 const selectionPrompts = {
   movies: [
     "Which movies did you watch this year?",
@@ -56,7 +54,6 @@ const selectionPrompts = {
     "Pick the games you enjoyed most:",
     "Choose the games that defined your year in"
   ]
-  // Add more categories as needed
 };
 
 const SubTab = ({ 
@@ -73,15 +70,25 @@ const SubTab = ({
 }: SubTabProps) => {
   const [availableItems, setAvailableItems] = useState<DatabaseItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<DatabaseItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startPosRef = useRef({ x: 0, y: 0 });
   
   const prompts = selectionPrompts[categoryId as keyof typeof selectionPrompts] || [
     `Select your ${categoryName.toLowerCase()} from ${currentYear}:`
   ];
 
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+
+  // Check if we're in movies category for card interface
+  const isMovieCategory = categoryId === 'movies';
 
   // Fetch items from database
   useEffect(() => {
@@ -90,12 +97,11 @@ const SubTab = ({
         setLoading(true);
         setError(null);
 
-        // Map category names to table names (adjust as needed)
         const tableName = categoryId === 'movies' ? 'movies' : 
                          categoryId === 'tv' ? 'tv_shows' :
                          categoryId === 'music' ? 'songs' :
                          categoryId === 'games' ? 'games' :
-                         categoryId; // fallback to categoryId
+                         categoryId;
 
         const { data, error: fetchError } = await supabase
           .from(tableName)
@@ -124,6 +130,90 @@ const SubTab = ({
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Card swipe handlers for movies
+  const handleSwipeLeft = () => {
+    setSwipeDirection('left');
+    setTimeout(() => {
+      setCurrentIndex(prev => prev + 1);
+      setSwipeDirection(null);
+      setDragOffset({ x: 0, y: 0 });
+      setRotation(0);
+    }, 300);
+  };
+
+  const handleSwipeRight = () => {
+    const currentItem = filteredItems[currentIndex];
+    if (currentItem) {
+      setSelectedItems(prev => [...prev, currentItem]);
+    }
+    setSwipeDirection('right');
+    setTimeout(() => {
+      setCurrentIndex(prev => prev + 1);
+      setSwipeDirection(null);
+      setDragOffset({ x: 0, y: 0 });
+      setRotation(0);
+    }, 300);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    startPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - startPosRef.current.x;
+    const deltaY = e.clientY - startPosRef.current.y;
+    setDragOffset({ x: deltaX, y: deltaY });
+    setRotation(deltaX * 0.1);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const deltaX = e.touches[0].clientX - startPosRef.current.x;
+    const deltaY = e.touches[0].clientY - startPosRef.current.y;
+    setDragOffset({ x: deltaX, y: deltaY });
+    setRotation(deltaX * 0.1);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    if (Math.abs(dragOffset.x) > 100) {
+      if (dragOffset.x > 0) {
+        handleSwipeRight();
+      } else {
+        handleSwipeLeft();
+      }
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+      setRotation(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    if (Math.abs(dragOffset.x) > 100) {
+      if (dragOffset.x > 0) {
+        handleSwipeRight();
+      } else {
+        handleSwipeLeft();
+      }
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+      setRotation(0);
+    }
+  };
+
+  // List-based handlers for non-movies
   const toggleItemSelection = (item: DatabaseItem) => {
     const isSelected = selectedItems.some(selected => selected.id === item.id);
     
@@ -134,53 +224,172 @@ const SubTab = ({
     }
   };
 
-  const handleSave = () => {
-    // Convert selected items to strings for the onSave callback
-    const memoryStrings = selectedItems.map(item => item.title);
-    onSave(memoryStrings);
-  };
-
   const isItemSelected = (item: DatabaseItem) => {
     return selectedItems.some(selected => selected.id === item.id);
   };
 
-  return (
-    <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} h-full w-full flex flex-col`}>
-      
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
-            <span className="text-white font-medium text-sm" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-              {currentYear} • {categoryName}
-            </span>
+  const handleSave = () => {
+    const memoryStrings = selectedItems.map(item => item.title);
+    onSave(memoryStrings);
+  };
+
+  // Render card stack for movies
+  const renderCardStack = () => {
+    if (currentIndex >= filteredItems.length) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-white max-w-md">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+              <svg className="w-20 h-20 mx-auto mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-2xl font-medium mb-2" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                All Done!
+              </h3>
+              <p className="text-white/80 text-lg leading-relaxed" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                You've reviewed all available movies for {currentYear}
+              </p>
+            </div>
           </div>
         </div>
-        
-        <SkipDropdown
-          mode="sub"
-          onSkipMemory={onSkipMemory}
-          onSkipYear={onSkipYear}
-          onSkipEntirely={onSkipEntirely}
-          className="relative z-50"
-        />
-      </div>
+      );
+    }
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
-        
-        {/* Title Section */}
-        <div className="text-center mb-8 flex-shrink-0">
-          <h2 className="text-3xl sm:text-4xl font-medium text-white leading-tight mb-4"
-              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            {categoryName} in {currentYear}
-          </h2>
-          <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed"
-             style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            {selectedPrompt} {currentYear}
-          </p>
+    const currentCard = filteredItems[currentIndex];
+    const nextCard = filteredItems[currentIndex + 1];
+    const afterNextCard = filteredItems[currentIndex + 2];
+
+    return (
+      <div className="flex-1 flex items-center justify-center px-6 relative">
+        <div className="relative w-full max-w-md h-[500px]">
+          {/* Stack of cards behind */}
+          {afterNextCard && (
+            <div 
+              className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
+              style={{
+                transform: 'scale(0.88) translateY(16px)',
+                zIndex: 1
+              }}
+            />
+          )}
+          
+          {nextCard && (
+            <div 
+              className="absolute inset-0 bg-white/15 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
+              style={{
+                transform: 'scale(0.94) translateY(8px)',
+                zIndex: 2
+              }}
+            >
+              <div className="flex flex-col items-center justify-center h-full p-8">
+                <h3 className="text-3xl font-medium text-white text-center leading-tight"
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {nextCard.title}
+                </h3>
+              </div>
+            </div>
+          )}
+
+          {/* Active card */}
+          <div 
+            ref={cardRef}
+            className="absolute inset-0 bg-white/20 backdrop-blur-md rounded-3xl border border-white/30 shadow-2xl cursor-grab active:cursor-grabbing select-none"
+            style={{
+              transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
+              transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              zIndex: 3,
+              opacity: swipeDirection ? 0 : 1
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Swipe indicators */}
+            <div 
+              className="absolute top-8 left-8 px-6 py-3 bg-red-500/80 backdrop-blur-sm rounded-2xl border-4 border-red-400 transform -rotate-12 transition-opacity duration-200"
+              style={{
+                opacity: dragOffset.x < -50 ? 1 : 0,
+                zIndex: 10
+              }}
+            >
+              <span className="text-white font-bold text-2xl" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                SKIP
+              </span>
+            </div>
+            
+            <div 
+              className="absolute top-8 right-8 px-6 py-3 bg-green-500/80 backdrop-blur-sm rounded-2xl border-4 border-green-400 transform rotate-12 transition-opacity duration-200"
+              style={{
+                opacity: dragOffset.x > 50 ? 1 : 0,
+                zIndex: 10
+              }}
+            >
+              <span className="text-white font-bold text-2xl" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                SAVE
+              </span>
+            </div>
+
+            {/* Card content */}
+            <div className="flex flex-col items-center justify-center h-full p-8">
+              <div className="text-center space-y-6">
+                <h3 className="text-4xl font-medium text-white leading-tight"
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {currentCard.title}
+                </h3>
+                
+                {currentCard.popularity && (
+                  <div className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                    <svg className="w-5 h-5 text-yellow-300 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                    <span className="text-white font-medium text-lg">
+                      {currentCard.popularity}/10
+                    </span>
+                  </div>
+                )}
+
+                <div className="pt-8">
+                  <p className="text-white/70 text-base" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                    Swipe right to save • Swipe left to skip
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
+        {/* Bottom action buttons */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-6 pb-6">
+          <button 
+            onClick={handleSwipeLeft}
+            className="w-16 h-16 rounded-full bg-red-500/80 hover:bg-red-500 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={handleSwipeRight}
+            className="w-16 h-16 rounded-full bg-green-500/80 hover:bg-green-500 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render list view for non-movies
+  const renderListView = () => {
+    return (
+      <>
         {/* Search Section */}
         <div className="max-w-2xl mx-auto w-full mb-6 flex-shrink-0">
           <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-xl">
@@ -195,7 +404,7 @@ const SubTab = ({
           </div>
         </div>
 
-        {/* Items List - Scrollable */}
+        {/* Items List */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {loading ? (
             <div className="text-center text-white/60 mt-16">
@@ -290,6 +499,71 @@ const SubTab = ({
             </div>
           )}
         </div>
+      </>
+    );
+  };
+
+  return (
+    <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} h-full w-full flex flex-col`}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+            <span className="text-white font-medium text-sm" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              {currentYear} • {categoryName}
+            </span>
+          </div>
+        </div>
+        
+        <SkipDropdown
+          mode="sub"
+          onSkipMemory={onSkipMemory}
+          onSkipYear={onSkipYear}
+          onSkipEntirely={onSkipEntirely}
+          className="relative z-50"
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
+        {/* Title Section */}
+        <div className="text-center mb-8 flex-shrink-0">
+          <h2 className="text-3xl sm:text-4xl font-medium text-white leading-tight mb-4"
+              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            {categoryName} in {currentYear}
+          </h2>
+          <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed"
+             style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            {isMovieCategory ? 'Swipe right to save, left to skip' : `${selectedPrompt} ${currentYear}`}
+          </p>
+        </div>
+
+        {/* Conditional rendering based on category */}
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-white/60">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 max-w-md mx-auto">
+                <div className="animate-spin w-8 h-8 border-2 border-white/30 border-t-white/70 rounded-full mx-auto mb-4"></div>
+                <p className="text-lg font-medium" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  Loading {categoryName.toLowerCase()}...
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-red-200">
+              <div className="bg-red-900/20 backdrop-blur-sm rounded-2xl p-8 border border-red-500/20 max-w-md mx-auto">
+                <svg className="w-16 h-16 mx-auto mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-lg font-medium mb-2" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                  {error}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : isMovieCategory ? renderCardStack() : renderListView()}
       </div>
 
       {/* Fixed Footer with Save Button */}
