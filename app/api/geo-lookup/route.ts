@@ -1,36 +1,40 @@
 export async function GET(req: Request) {
-  const geo = {
-    ip: "",
-    city: "",
-    region: "",
-    country: "",
-    countryCode: "",
-    displayName: "",
-  };
-
   try {
-    // Read IP from Vercel
-    const ip =
-      (req.headers.get("x-forwarded-for") || "").split(",")[0]?.trim() || "";
-    geo.ip = ip;
+    // ❗ Read header set by middleware
+    const countryCode = req.headers.get("x-user-country") || "";
 
-    // Call IP geolocation API
-    const res = await fetch(`https://ipapi.co/${ip}/json/`);
-    const data = await res.json();
+    // If we have a country code (IN, BR, US, etc.), guess main city
+    // (Better fallback than full IP lookup — Vercel edge hides IP sometimes)
+    const countryFallbacks: Record<string, string> = {
+      IN: "India",
+      BR: "Brazil",
+      US: "United States",
+      GB: "United Kingdom",
+      CA: "Canada",
+      AU: "Australia",
+      JP: "Japan",
+      KR: "South Korea",
+      FR: "France",
+      DE: "Germany",
+      ES: "Spain",
+      IT: "Italy",
+    };
 
-    geo.city = data.city || "";
-    geo.region = data.region || "";
-    geo.country = data.country_name || "";
-    geo.countryCode = data.country || "";
+    let displayName = "";
 
-    // Build display name for LocationTab input
-    const locParts = [geo.city, geo.region, geo.country].filter(Boolean);
-    geo.displayName = locParts.join(", ");
+    if (countryFallbacks[countryCode]) {
+      displayName = countryFallbacks[countryCode];
+    }
 
-    return Response.json(geo);
+    // Return detected or fallback location
+    return Response.json({
+      countryCode,
+      displayName,
+    });
+
   } catch (e) {
     return Response.json({
-      error: "Failed to detect location",
+      countryCode: "",
       displayName: "",
     });
   }
