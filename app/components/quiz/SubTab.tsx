@@ -100,7 +100,7 @@ const SubTab = ({
 
       for (let page = 1; page <= totalPages; page++) {
         const response = await fetch(
-          `../../api/tmdb-proxy?year=${year}&page=${page}`
+          `/api/tmdb-proxy?year=${year}&page=${page}`
         );
 
         if (!response.ok) {
