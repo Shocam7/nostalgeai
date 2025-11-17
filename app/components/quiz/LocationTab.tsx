@@ -17,8 +17,11 @@ interface LocationSuggestion {
 }
 
 const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
-  const [location, setLocation] = useState(answer || '');
+  const [location, setLocation] = useState(answer || "");
+  const [autoFilled, setAutoFilled] = useState(false);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+
+  
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -220,6 +223,42 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
       onAnswer(location);
     }
   }, [location, showSuggestions, onAnswer]);
+
+
+
+
+  
+
+
+  // Auto-fill user's detected location on first load
+useEffect(() => {
+  if (answer) return; // Do not override existing saved answer
+  if (autoFilled) return;
+
+  async function detectLocation() {
+    try {
+      const response = await fetch("/api/geo-lookup");
+      const data = await response.json();
+
+      if (data.displayName) {
+        setLocation(data.displayName);
+        onAnswer(data.displayName);
+        setAutoFilled(true);
+      }
+    } catch (err) {
+      console.warn("Geo lookup failed:", err);
+    }
+  }
+
+  detectLocation();
+}, [answer, autoFilled, onAnswer]);
+
+
+
+
+
+
+  
 
   const formatDisplayName = (displayName: string): string => {
     const parts = displayName.split(', ');
