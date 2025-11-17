@@ -2,7 +2,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || '';
+const TMDB_API_KEY = '773be65506318f1d2770bfb578f0fda1';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export default async function handler(
