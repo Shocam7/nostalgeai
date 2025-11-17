@@ -56,9 +56,7 @@ const selectionPrompts = {
   ]
 };
 
-// TMDB API configuration
-const TMDB_API_KEY = '773be65506318f1d2770bfb578f0fda1';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+// Use server-side proxy to bypass geo-restrictions
 
 const SubTab = ({ 
   categoryId, 
@@ -94,7 +92,7 @@ const SubTab = ({
   // Check if we're in movies category for card interface
   const isMovieCategory = categoryId === 'movies';
 
-  // Fetch movies from TMDB API
+  // Fetch movies from TMDB API via server-side proxy
   const fetchMoviesFromTMDB = async (year: number) => {
     try {
       const movies: DatabaseItem[] = [];
@@ -102,23 +100,18 @@ const SubTab = ({
 
       for (let page = 1; page <= totalPages; page++) {
         const response = await fetch(
-          `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&primary_release_year=${year}&sort_by=popularity.desc&page=${page}&language=en-US`
+          `../../api/tmdb-proxy?year=${year}&page=${page}`
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch movies from TMDB');
+          throw new Error('Failed to fetch movies from proxy');
         }
 
         const data = await response.json();
         
-        const formattedMovies = data.results.map((movie: any) => ({
-          id: movie.id,
-          title: movie.title,
-          year: year,
-          popularity: movie.vote_average ? Math.round(movie.vote_average * 10) / 10 : undefined
-        }));
-
-        movies.push(...formattedMovies);
+        if (data.results) {
+          movies.push(...data.results);
+        }
       }
 
       return movies;
