@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
       title: movie.title,
       year: parseInt(year),
       popularity: movie.vote_average ? Math.round(movie.vote_average * 10) / 10 : undefined,
+      poster_path: movie.poster_path,
     }));
 
     return NextResponse.json({
