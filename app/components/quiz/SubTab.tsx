@@ -27,6 +27,7 @@ interface DatabaseItem {
   popularity?: number;
   people?: string[];
   preferred_age?: string;
+  poster_path?: string;
 }
 
 const selectionPrompts = {
@@ -162,10 +163,10 @@ const SubTab = ({
     fetchItems();
   }, [categoryId, currentYear]);
 
-  // Filter items based on search query
-  const filteredItems = availableItems.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter items based on search query and sort by popularity
+  const filteredItems = availableItems
+    .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
   // Card swipe handlers for movies
   const handleSwipeLeft = () => {
@@ -330,7 +331,7 @@ const SubTab = ({
           {/* Active card */}
           <div 
             ref={cardRef}
-            className="absolute inset-0 bg-white/20 backdrop-blur-md rounded-3xl border border-white/30 shadow-2xl cursor-grab active:cursor-grabbing select-none"
+            className="absolute inset-0 rounded-3xl shadow-2xl cursor-grab active:cursor-grabbing select-none overflow-hidden"
             style={{
               transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
               transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -345,6 +346,20 @@ const SubTab = ({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
+            {/* Movie Poster Background */}
+            {currentCard.poster_path ? (
+              <>
+                <img 
+                  src={`https://image.tmdb.org/t/p/w500${currentCard.poster_path}`}
+                  alt={currentCard.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30" />
+            )}
+
             {/* Swipe indicators */}
             <div 
               className="absolute top-8 left-8 px-6 py-3 bg-red-500/80 backdrop-blur-sm rounded-2xl border-4 border-red-400 transform -rotate-12 transition-opacity duration-200"
@@ -371,15 +386,15 @@ const SubTab = ({
             </div>
 
             {/* Card content */}
-            <div className="flex flex-col items-center justify-center h-full p-8">
-              <div className="text-center space-y-6">
-                <h3 className="text-4xl font-medium text-white leading-tight"
-                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+            <div className="relative flex flex-col items-center justify-end h-full p-8">
+              <div className="text-center space-y-6 w-full">
+                <h3 className="text-4xl font-medium text-white leading-tight drop-shadow-lg"
+                    style={{fontFamily: 'Crimson Text, Times New Roman, serif', textShadow: '0 2px 10px rgba(0,0,0,0.7)'}}>
                   {currentCard.title}
                 </h3>
                 
                 {currentCard.popularity && (
-                  <div className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                  <div className="flex items-center justify-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 shadow-lg">
                     <svg className="w-5 h-5 text-yellow-300 fill-current" viewBox="0 0 24 24">
                       <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                     </svg>
@@ -389,8 +404,8 @@ const SubTab = ({
                   </div>
                 )}
 
-                <div className="pt-8">
-                  <p className="text-white/70 text-base" style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                <div className="pt-4">
+                  <p className="text-white/90 text-base drop-shadow-md" style={{fontFamily: 'Crimson Text, Times New Roman, serif', textShadow: '0 1px 4px rgba(0,0,0,0.5)'}}>
                     Swipe right to save • Swipe left to skip
                   </p>
                 </div>
