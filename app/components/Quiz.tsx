@@ -82,6 +82,15 @@ const Quiz = ({ onBack }: QuizProps) => {
   const [memoryData, setMemoryData] = useState<MemoryData>({});
   
   // SubTab states
+
+
+  
+  const geo = await fetch("/api/geo-lookup").then(r => r.json());
+  setDetectedCountryCode(geo.countryCode);
+
+
+
+  
   const [inSubTab, setInSubTab] = useState(false);
   const [currentCategories, setCurrentCategories] = useState<string[]>([]);
   const [currentCategoryIndex, setCategoryIndex] = useState(0);
@@ -317,17 +326,17 @@ const Quiz = ({ onBack }: QuizProps) => {
             className="fixed inset-0 z-[100]"
           >
             <SubTab
-              categoryId={currentCategories[currentCategoryIndex]}
-              categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
-              gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
-              currentYear={currentYear!}
-              onSave={handleSubTabSave}
-              onSkipMemory={handleSkipMemory}
-              onSkipYear={handleSkipYear}
-              onSkipEntirely={handleSkipEntirely}
-              isAnimatingIn={false}
-              isAnimatingOut={false}
-            />
+            categoryId="movies"
+            categoryName="Movies"
+            gradient={...}
+            currentYear={currentYear}
+            userCountryCode={detectedCountryCode}   // <-- PASS IT HERE
+            onSave={...}
+            onSkipMemory={...}
+            onSkipYear={...}
+            onSkipEntirely={...}
+           />
+
           </motion.div>
         )}
       </AnimatePresence>
