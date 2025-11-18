@@ -85,8 +85,20 @@ const Quiz = ({ onBack }: QuizProps) => {
 
 
   
-  const geo = await fetch("/api/geo-lookup").then(r => r.json());
-  setDetectedCountryCode(geo.countryCode);
+  const [detectedCountryCode, setDetectedCountryCode] = useState("US");
+  React.useEffect(() => {
+  (async () => {
+    try {
+      const geo = await fetch("/api/geo-lookup").then((r) => r.json());
+      if (geo?.countryCode) {
+        setDetectedCountryCode(geo.countryCode);
+      }
+    } catch (err) {
+      console.error("Geo lookup error:", err);
+    }
+  })();
+}, []);
+  
 
 
 
@@ -280,6 +292,8 @@ const Quiz = ({ onBack }: QuizProps) => {
     }
     return 'Next';
   };
+
+  
 
   // Show results page
   if (showResults) {
