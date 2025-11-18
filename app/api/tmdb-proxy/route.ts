@@ -1,62 +1,60 @@
-// app/api/tmdb-proxy/route.ts
+import { NextResponse } from "next/server";
 
-import { NextRequest, NextResponse } from 'next/server';
+// Year-only discovery-based TMDB proxy
+export async function GET(req: Request) {
+  const url = new URL(req.url);
 
-const TMDB_API_KEY = '773be65506318f1d2770bfb578f0fda1';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+  const year = url.searchParams.get("year") || "";
+  const region = url.searchParams.get("region") || "US"; // fallback region
+  const page = url.searchParams.get("page") || "1";
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const year = searchParams.get('year');
-  const page = searchParams.get('page') || '1';
+  const headers = {
+    Authorization: `Bearer ${process.env.TMDB_TOKEN}`,
+    Accept: "application/json"
+  };
 
-  // Validate year parameter
-  if (!year) {
-    return NextResponse.json(
-      { error: 'Year parameter is required' },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const response = await fetch(
-      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&primary_release_year=${year}&sort_by=popularity.desc&page=${page}&language=en-US`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`TMDB API returned ${response.status}`);
+  async function fetchJson(endpoint: string) {
+    try {
+      const res = await fetch(endpoint, { headers });
+      return await res.json();
+    } catch (e) {
+      console.error("Fetch error:", endpoint, e);
+      return { results: [] };
     }
-
-    const data = await response.json();
-
-    // Transform the data to match your interface
-    const transformedResults = data.results.map((movie: any) => ({
-      id: movie.id,
-      title: movie.title,
-      year: parseInt(year),
-      popularity: movie.vote_average ? Math.round(movie.vote_average * 10) / 10 : undefined,
-      poster_path: movie.poster_path,
-    }));
-
-    return NextResponse.json({
-      results: transformedResults,
-      page: data.page,
-      total_pages: data.total_pages,
-      total_results: data.total_results,
-    });
-  } catch (error) {
-    console.error('TMDB proxy error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch movies from TMDB',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
   }
+
+  // ----------- 1. Regional movies for the selected year -----------
+  const regionalData = await fetchJson(
+    `https://api.themoviedb.org/3/discover/movie?` +
+      new URLSearchParams({
+        region,
+        primary_release_year: year,
+        sort_by: "popularity.desc",
+        page
+      })
+  );
+
+  // ----------- 2. Global movies for the selected year -----------
+  const globalData = await fetchJson(
+    `https://api.themoviedb.org/3/discover/movie?` +
+      new URLSearchParams({
+        primary_release_year: year,
+        sort_by: "popularity.desc",
+        page
+      })
+  );
+
+  // ----------- Combine -----------
+  let combined = [
+    ...(regionalData.results || []),
+    ...(globalData.results || [])
+  ];
+
+  // ----------- Deduplicate by movie ID -----------
+  const unique = Array.from(new Map(combined.map((m) => [m.id, m])).values());
+
+  // ----------- Sort by popularity -----------
+  unique.sort((a, b) => b.popularity - a.popularity);
+
+  return NextResponse.json({ results: unique });
 }
