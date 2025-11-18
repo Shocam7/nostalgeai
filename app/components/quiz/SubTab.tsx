@@ -12,6 +12,7 @@ interface SubTabProps {
     shadow: string;
   };
   currentYear: number;
+  userCountryCode: string;   // <-- ADD THIS
   onSave: (memories: string[]) => void;
   onSkipMemory: () => void;
   onSkipYear: () => void;
@@ -19,6 +20,7 @@ interface SubTabProps {
   isAnimatingIn: boolean;
   isAnimatingOut: boolean;
 }
+
 
 interface DatabaseItem {
   id: number;
@@ -64,6 +66,7 @@ const SubTab = ({
   categoryName, 
   gradient, 
   currentYear, 
+  userCountryCode,   // <-- ADD THIS
   onSave, 
   onSkipMemory, 
   onSkipYear, 
@@ -101,9 +104,9 @@ const SubTab = ({
 
       for (let page = 1; page <= totalPages; page++) {
         const response = await fetch(
-          `/api/tmdb-proxy?year=${year}&page=${page}&region=${userCountryCode}
-          `
+          `/api/tmdb-proxy?year=${year}&page=${page}&region=${userCountryCode}`
         );
+        
 
         if (!response.ok) {
           throw new Error('Failed to fetch movies from proxy');
