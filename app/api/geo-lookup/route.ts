@@ -1,49 +1,85 @@
+// Country code → Country name map (minimal but accurate)
+const countryNames: Record<string, string> = {
+  IN: "India",
+  PL: "Poland",
+  FR: "France",
+  BR: "Brazil",
+  US: "United States",
+  GB: "United Kingdom",
+  CA: "Canada",
+  AU: "Australia",
+  DE: "Germany",
+  JP: "Japan",
+  KR: "South Korea",
+  ES: "Spain",
+  IT: "Italy"
+};
+
 export async function GET(req: Request) {
-  let country = req.headers.get("x-user-country") || "";
+  let countryCode = req.headers.get("x-user-country") || "";
   let city = req.headers.get("x-user-city") || "";
   let region = req.headers.get("x-user-region") || "";
 
-  // Step 1 — Server detected country
-  if (country && country !== "UNKNOWN") {
-    const displayName = [city, region, country].filter(Boolean).join(", ");
-    return Response.json({ 
+  let countryName = countryNames[countryCode] || "";
+
+  // ------ 1. Server-side geolocation detected ------
+  if (countryCode && countryCode !== "UNKNOWN") {
+    const displayName = [city, region, countryName].filter(Boolean).join(", ");
+    
+    return Response.json({
       mode: "server",
-      city, region, country,
-      displayName 
+      countryCode,
+      countryName,
+      city,
+      region,
+      displayName
     });
   }
 
-  // Step 2 — FALLBACK: use client IP to detect location
+  // ------ 2. Fallback to client IP ------
   try {
+    // Get the user's IP from /api/ip
     const ipRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/ip`);
     const { ip } = await ipRes.json();
 
     if (!ip) {
-      return Response.json({ 
+      return Response.json({
         mode: "none",
-        city: "", region: "", country: "",
+        countryCode: "",
+        countryName: "",
+        city: "",
+        region: "",
         displayName: ""
       });
     }
 
-    const geo = await fetch(`https://ipapi.co/${ip}/json/`);
-    const data = await geo.json();
+    // Resolve IP into geolocation
+    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await geoRes.json();
 
+    countryCode = data.country || "";
+    countryName = data.country_name || "";
     city = data.city || "";
     region = data.region || "";
-    country = data.country_name || "";
 
     return Response.json({
       mode: "browser-ip",
-      city, region, country,
-      displayName: [city, region, country].filter(Boolean).join(", ")
+      countryCode,
+      countryName,
+      city,
+      region,
+      displayName: [city, region, countryName].filter(Boolean).join(", ")
     });
 
   } catch (err) {
     return Response.json({
       mode: "error",
-      city: "", region: "", country: "",
+      countryCode: "",
+      countryName: "",
+      city: "",
+      region: "",
       displayName: ""
     });
   }
 }
+  
