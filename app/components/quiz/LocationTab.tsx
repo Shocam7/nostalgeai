@@ -232,24 +232,24 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
 
   // Auto-fill user's detected location on first load
 useEffect(() => {
-  async function load() {
+  async function detect() {
     try {
-      if (location.trim().length > 0) return; // do NOT override user typing
-
       const res = await fetch("/api/geo-lookup");
       const data = await res.json();
 
-      if (data.displayName) {
+      if (data.displayName && location.trim() === "") {
         setLocation(data.displayName);
         onAnswer(data.displayName);
       }
     } catch (e) {
-      console.warn("Geo lookup failed:", e);
+      console.warn("Geo error:", e);
     }
   }
 
-  load();
+  detect();
 }, []);
+  
+
 
 
 
