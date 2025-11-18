@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
-// Year-only discovery-based TMDB proxy
 export async function GET(req: Request) {
   const url = new URL(req.url);
 
   const year = url.searchParams.get("year") || "";
-  const region = url.searchParams.get("region") || "US"; // fallback region
+  const region = url.searchParams.get("region") || "US";
   const page = url.searchParams.get("page") || "1";
 
   const headers = {
@@ -23,37 +22,39 @@ export async function GET(req: Request) {
     }
   }
 
-  // ----------- 1. Regional movies for the selected year -----------
+  // ---- 1. Regional Movies ----
   const regionalData = await fetchJson(
     `https://api.themoviedb.org/3/discover/movie?` +
       new URLSearchParams({
         region,
         primary_release_year: year,
+        include_adult: "false",    //  ⛔ BLOCK ADULT CONTENT
         sort_by: "popularity.desc",
         page
       })
   );
 
-  // ----------- 2. Global movies for the selected year -----------
+  // ---- 2. Global Movies ----
   const globalData = await fetchJson(
     `https://api.themoviedb.org/3/discover/movie?` +
       new URLSearchParams({
         primary_release_year: year,
+        include_adult: "false",    //  ⛔ BLOCK ADULT CONTENT
         sort_by: "popularity.desc",
         page
       })
   );
 
-  // ----------- Combine -----------
+  // ---- Combine ----
   let combined = [
     ...(regionalData.results || []),
     ...(globalData.results || [])
   ];
 
-  // ----------- Deduplicate by movie ID -----------
+  // ---- Deduplicate ----
   const unique = Array.from(new Map(combined.map((m) => [m.id, m])).values());
 
-  // ----------- Sort by popularity -----------
+  // ---- Sort ----
   unique.sort((a, b) => b.popularity - a.popularity);
 
   return NextResponse.json({ results: unique });
