@@ -326,15 +326,17 @@ const Quiz = ({ onBack }: QuizProps) => {
             className="fixed inset-0 z-[100]"
           >
             <SubTab
-            categoryId="movies"
-            categoryName="Movies"
-            gradient={...}
-            currentYear={currentYear}
-            userCountryCode={detectedCountryCode}   // <-- PASS IT HERE
-            onSave={...}
-            onSkipMemory={...}
-            onSkipYear={...}
-            onSkipEntirely={...}
+            categoryId={currentCategories[currentCategoryIndex]}
+            categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
+            gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
+            currentYear={currentYear!}
+            userCountryCode={detectedCountryCode}
+            onSave={handleSubTabSave}
+            onSkipMemory={handleSkipMemory}
+            onSkipYear={handleSkipYear}
+            onSkipEntirely={handleSkipEntirely}
+            isAnimatingIn={false}
+            isAnimatingOut={false}
            />
 
           </motion.div>
