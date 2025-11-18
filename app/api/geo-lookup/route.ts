@@ -1,41 +1,49 @@
 export async function GET(req: Request) {
+  let country = req.headers.get("x-user-country") || "";
+  let city = req.headers.get("x-user-city") || "";
+  let region = req.headers.get("x-user-region") || "";
+
+  // Step 1 — Server detected country
+  if (country && country !== "UNKNOWN") {
+    const displayName = [city, region, country].filter(Boolean).join(", ");
+    return Response.json({ 
+      mode: "server",
+      city, region, country,
+      displayName 
+    });
+  }
+
+  // Step 2 — FALLBACK: use client IP to detect location
   try {
-    // ❗ Read header set by middleware
-    const countryCode = req.headers.get("x-user-country") || "";
+    const ipRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/ip`);
+    const { ip } = await ipRes.json();
 
-    // If we have a country code (IN, BR, US, etc.), guess main city
-    // (Better fallback than full IP lookup — Vercel edge hides IP sometimes)
-    const countryFallbacks: Record<string, string> = {
-      IN: "India",
-      BR: "Brazil",
-      US: "United States",
-      GB: "United Kingdom",
-      CA: "Canada",
-      AU: "Australia",
-      JP: "Japan",
-      KR: "South Korea",
-      FR: "France",
-      DE: "Germany",
-      ES: "Spain",
-      IT: "Italy",
-    };
-
-    let displayName = "";
-
-    if (countryFallbacks[countryCode]) {
-      displayName = countryFallbacks[countryCode];
+    if (!ip) {
+      return Response.json({ 
+        mode: "none",
+        city: "", region: "", country: "",
+        displayName: ""
+      });
     }
 
-    // Return detected or fallback location
+    const geo = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await geo.json();
+
+    city = data.city || "";
+    region = data.region || "";
+    country = data.country_name || "";
+
     return Response.json({
-      countryCode,
-      displayName,
+      mode: "browser-ip",
+      city, region, country,
+      displayName: [city, region, country].filter(Boolean).join(", ")
     });
 
-  } catch (e) {
+  } catch (err) {
     return Response.json({
-      countryCode: "",
-      displayName: "",
+      mode: "error",
+      city: "", region: "", country: "",
+      displayName: ""
     });
   }
 }
