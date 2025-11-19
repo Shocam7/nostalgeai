@@ -51,22 +51,33 @@ export async function GET(req: Request) {
   // ---- 1. Regional Movies (by language) ----
   const regionalResults = [];
   
+  console.log(`\n🌍 Fetching movies for region: ${region}, languages: ${languages.join(', ')}, year: ${year}`);
+  
   for (const language of languages) {
-    const data = await fetchJson(
-      `https://api.themoviedb.org/3/discover/movie?` +
-        new URLSearchParams({
-          with_original_language: language,
-          primary_release_year: year,
-          include_adult: "false",
-          sort_by: "popularity.desc",
-          page
-        })
-    );
+    const endpoint = `https://api.themoviedb.org/3/discover/movie?` +
+      new URLSearchParams({
+        with_original_language: language,
+        primary_release_year: year,
+        include_adult: "false",
+        sort_by: "popularity.desc",
+        page
+      });
+    
+    console.log(`🎬 Fetching ${language} movies from: ${endpoint}`);
+    
+    const data = await fetchJson(endpoint);
+    
+    console.log(`✅ ${language} results: ${data.results?.length || 0} movies`);
+    if (data.results && data.results.length > 0) {
+      console.log(`   Top 3 ${language} movies:`, data.results.slice(0, 3).map((m: any) => m.title));
+    }
     
     if (data.results) {
       regionalResults.push(...data.results);
     }
   }
+  
+  console.log(`📊 Total regional movies fetched: ${regionalResults.length}`);
 
   // ---- 2. Global Movies (English fallback) ----
   const globalData = await fetchJson(
