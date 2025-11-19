@@ -98,33 +98,35 @@ const SubTab = ({
 
   // Fetch movies from TMDB API via server-side proxy
   const fetchMoviesFromTMDB = async (year: number) => {
-    try {
-      const movies: DatabaseItem[] = [];
-      const totalPages = 5; // Fetch first 5 pages (100 movies)
+  try {
+    console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
+    
+    const movies: DatabaseItem[] = [];
+    const totalPages = 5;
 
-      for (let page = 1; page <= totalPages; page++) {
-        const response = await fetch(
-          `/api/tmdb-proxy?year=${year}&page=${page}&region=${userCountryCode}`
-        );
-        
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch movies from proxy');
-        }
-
-        const data = await response.json();
-        
-        if (data.results) {
-          movies.push(...data.results);
-        }
+    for (let page = 1; page <= totalPages; page++) {
+      const response = await fetch(
+        `/api/tmdb-proxy?year=${year}&page=${page}&region=${userCountryCode}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch movies from proxy');
       }
 
-      return movies;
-    } catch (error) {
-      console.error('Error fetching from TMDB:', error);
-      throw error;
+      const data = await response.json();
+      
+      if (data.results) {
+        movies.push(...data.results);
+      }
     }
-  };
+
+    console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
+    return movies;
+  } catch (error) {
+    console.error('Error fetching from TMDB:', error);
+    throw error;
+  }
+};
 
   // Fetch items from database or TMDB
   useEffect(() => {
