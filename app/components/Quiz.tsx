@@ -398,19 +398,20 @@ const handleNext = () => {
             }}
             className="fixed inset-0 z-[100]"
           >
-            <SubTab
+            // Update SubTab rendering to pass userCountryCode:
+          <SubTab
             categoryId={currentCategories[currentCategoryIndex]}
             categoryName={memoryClasses.find(c => c.id === currentCategories[currentCategoryIndex])?.name || ''}
             gradient={memoryGradients[currentCategories[currentCategoryIndex]] || gradientOptions[0]}
             currentYear={currentYear!}
-            userCountryCode={detectedCountryCode}
+            userCountryCode={userCountryCode} // Use the final saved country code
             onSave={handleSubTabSave}
             onSkipMemory={handleSkipMemory}
             onSkipYear={handleSkipYear}
             onSkipEntirely={handleSkipEntirely}
             isAnimatingIn={false}
             isAnimatingOut={false}
-           />
+          />
 
           </motion.div>
         )}
