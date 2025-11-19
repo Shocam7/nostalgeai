@@ -7,6 +7,52 @@ import SubTab from './quiz/SubTab';
 import SkipDropdown from './ui/SkipDropdown';
 import ResultsPage from './ResultsPage';
 
+
+
+
+const extractCountryCode = (locationString: string): string => {
+  // Extract country name from location string (e.g., "Paris, France" -> "France")
+  const parts = locationString.split(',').map(s => s.trim());
+  const countryName = parts[parts.length - 1]; // Last part is usually country
+  
+  // Simple country name to code mapping (expand as needed)
+  const countryMap: Record<string, string> = {
+    'India': 'IN',
+    'United States': 'US',
+    'USA': 'US',
+    'United Kingdom': 'GB',
+    'UK': 'GB',
+    'France': 'FR',
+    'Germany': 'DE',
+    'Canada': 'CA',
+    'Australia': 'AU',
+    'Japan': 'JP',
+    'South Korea': 'KR',
+    'Spain': 'ES',
+    'Italy': 'IT',
+    'Brazil': 'BR',
+    'Mexico': 'MX',
+    'Poland': 'PL',
+    'Netherlands': 'NL',
+    'Sweden': 'SE',
+    'Singapore': 'SG',
+    'UAE': 'AE',
+    'Hong Kong': 'HK',
+    'Argentina': 'AR',
+    // Add more as needed
+  };
+  
+  return countryMap[countryName] || 'US'; // Default to US if not found
+};
+
+
+
+
+
+
+
+
+
 interface QuizProps {
   onBack: () => void;
 }
@@ -85,8 +131,12 @@ const Quiz = ({ onBack }: QuizProps) => {
 
 
   
-  const [detectedCountryCode, setDetectedCountryCode] = useState("US");
-  React.useEffect(() => {
+  // In Quiz component, update the state:
+const [detectedCountryCode, setDetectedCountryCode] = useState("US");
+const [userCountryCode, setUserCountryCode] = useState("US"); // NEW: Final user-submitted country code
+
+// Update the geo-detection useEffect:
+React.useEffect(() => {
   (async () => {
     try {
       const geo = await fetch("/api/geo-lookup").then((r) => r.json());
@@ -126,18 +176,27 @@ const Quiz = ({ onBack }: QuizProps) => {
 
   const totalTabs = 3; // BirthDate + Location + Main tabs
 
-  const handleNext = () => {
-    if (currentTab === 0) {
-      setCurrentTab(1);
-    } else if (currentTab === 1) {
-      const birthDate = answers[0];
-      if (birthDate) {
-        const birthYear = new Date(birthDate).getFullYear();
-        const startYear = startFromBirth ? birthYear : birthYear + 5;
-        setCurrentYear(startYear);
-      }
-      setCurrentTab(2);
-    } else if (currentTab === 2) {
+  // Update handleNext function to extract and save country code:
+const handleNext = () => {
+  if (currentTab === 0) {
+    setCurrentTab(1);
+  } else if (currentTab === 1) {
+    // Extract country code from user's final location input
+    const userLocation = answers[1] as string;
+    if (userLocation) {
+      const countryCode = extractCountryCode(userLocation);
+      setUserCountryCode(countryCode);
+      console.log('🌍 User final country code:', countryCode); // Debug log
+    }
+    
+    const birthDate = answers[0];
+    if (birthDate) {
+      const birthYear = new Date(birthDate).getFullYear();
+      const startYear = startFromBirth ? birthYear : birthYear + 5;
+      setCurrentYear(startYear);
+    }
+    setCurrentTab(2);
+  } else if (currentTab === 2) {
       const selectedCategories = answers[2] as string[];
       if (selectedCategories && selectedCategories.length > 0 && !inSubTab) {
         setCurrentCategories(selectedCategories);
