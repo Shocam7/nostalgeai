@@ -10,7 +10,7 @@ export async function GET(req: Request) {
 
   // Language mapping
   const countryToLanguage: Record<string, string[]> = {
-    IN: ["hi", "ta", "te", "ml", "kn", "bn", "en"], // include English here too if needed
+    IN: ["hi", "ta", "te", "ml", "kn", "bn", "en"],
     FR: ["fr", "en"],
     DE: ["de", "en"],
     ES: ["es", "en"],
@@ -73,6 +73,7 @@ export async function GET(req: Request) {
   // -------------------------------
   // 1. Fetch movies for ALL languages (regional + English)
   // -------------------------------
+  const seenIds = new Set<number>();
   let allMovies: any[] = [];
 
   for (const lang of languages) {
@@ -88,21 +89,25 @@ export async function GET(req: Request) {
     const movies = await fetchAllPages(baseUrl);
 
     console.log(`🌐 ${lang}: ${movies.length} movies for year ${year}`);
-    allMovies.push(...movies);
+    
+    // Add only unique movies
+    for (const movie of movies) {
+      if (!seenIds.has(movie.id)) {
+        seenIds.add(movie.id);
+        allMovies.push(movie);
+      }
+    }
   }
 
-  // -------------------------------
-  // 2. Deduplicate
-  // -------------------------------
-  const unique = Array.from(new Map(allMovies.map((m) => [m.id, m])).values());
+  console.log(`✅ Total unique movies after deduplication: ${allMovies.length}`);
 
   // -------------------------------
-  // 3. Sort by popularity
+  // 2. Sort by popularity
   // -------------------------------
-  unique.sort((a, b) => b.popularity - a.popularity);
+  allMovies.sort((a, b) => b.popularity - a.popularity);
 
   return NextResponse.json({
-    total: unique.length,
-    results: unique,
+    total: allMovies.length,
+    results: allMovies,
   });
 }
