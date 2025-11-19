@@ -101,24 +101,17 @@ const SubTab = ({
   try {
     console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
     
-    const movies: DatabaseItem[] = [];
-    const totalPages = 5;
-
-    for (let page = 1; page <= totalPages; page++) {
-      const response = await fetch(
-        `/api/tmdb-proxy?year=${year}&page=${page}&region=${userCountryCode}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch movies from proxy');
-      }
-
-      const data = await response.json();
-      
-      if (data.results) {
-        movies.push(...data.results);
-      }
+    // The proxy already handles pagination internally, so just make ONE call
+    const response = await fetch(
+      `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch movies from proxy');
     }
+
+    const data = await response.json();
+    const movies = data.results || [];
 
     console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
     return movies;
