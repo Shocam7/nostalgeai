@@ -230,24 +230,27 @@ const LocationTab = ({ onAnswer, answer }: LocationTabProps) => {
   
 
 
-  // Auto-fill user's detected location on first load
+// Simplify the auto-fill useEffect:
 useEffect(() => {
   async function detect() {
     try {
       const res = await fetch("/api/geo-lookup");
       const data = await res.json();
 
+      // Only auto-fill if input is empty
       if (data.displayName && location.trim() === "") {
         setLocation(data.displayName);
         onAnswer(data.displayName);
+        console.log('📍 Auto-filled location:', data.displayName);
       }
     } catch (e) {
-      console.warn("Geo error:", e);
+      console.warn("Geo lookup error:", e);
     }
   }
 
   detect();
-}, []);
+}, []); // Run only once on mount
+
   
   
 
