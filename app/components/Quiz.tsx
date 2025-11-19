@@ -85,23 +85,16 @@ const Quiz = ({ onBack }: QuizProps) => {
 
 
   
-  const [detectedCountryCode, setDetectedCountryCode] = useState<string | null>(null);
-  const [geoLoading, setGeoLoading] = useState(true);
-  
+  const [detectedCountryCode, setDetectedCountryCode] = useState("US");
   React.useEffect(() => {
   (async () => {
     try {
       const geo = await fetch("/api/geo-lookup").then((r) => r.json());
       if (geo?.countryCode) {
         setDetectedCountryCode(geo.countryCode);
-      } else {
-        setDetectedCountryCode("US"); // fallback
       }
     } catch (err) {
       console.error("Geo lookup error:", err);
-      setDetectedCountryCode("US"); // fallback on error
-    } finally {
-      setGeoLoading(false);
     }
   })();
 }, []);
