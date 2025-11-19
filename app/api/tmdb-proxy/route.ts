@@ -1,106 +1,108 @@
 import { NextResponse } from "next/server";
 
+export const revalidate = 3600; // 1 hour cache
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
 
   const year = url.searchParams.get("year") || "";
   const region = url.searchParams.get("region") || "US";
-  const page = url.searchParams.get("page") || "1";
 
-  // Map country codes to primary languages
+  // Language mapping
   const countryToLanguage: Record<string, string[]> = {
-    'IN': ['hi', 'ta', 'te', 'ml', 'kn', 'bn'], // Hindi, Tamil, Telugu, Malayalam, Kannada, Bengali
-    'FR': ['fr'], // French
-    'DE': ['de'], // German
-    'ES': ['es'], // Spanish
-    'IT': ['it'], // Italian
-    'JP': ['ja'], // Japanese
-    'KR': ['ko'], // Korean
-    'BR': ['pt'], // Portuguese
-    'MX': ['es'], // Spanish
-    'PL': ['pl'], // Polish
-    'NL': ['nl'], // Dutch
-    'SE': ['sv'], // Swedish
-    'AR': ['es'], // Spanish
-    'CN': ['zh'], // Chinese
-    'RU': ['ru'], // Russian
-    'TR': ['tr'], // Turkish
-    'US': ['en'], // English
-    'GB': ['en'], // English
-    'CA': ['en', 'fr'], // English, French
-    'AU': ['en'], // English
+    IN: ["hi", "ta", "te", "ml", "kn", "bn", "en"], // include English here too if needed
+    FR: ["fr", "en"],
+    DE: ["de", "en"],
+    ES: ["es", "en"],
+    IT: ["it", "en"],
+    JP: ["ja", "en"],
+    KR: ["ko", "en"],
+    BR: ["pt", "en"],
+    MX: ["es", "en"],
+    PL: ["pl", "en"],
+    NL: ["nl", "en"],
+    SE: ["sv", "en"],
+    AR: ["es", "en"],
+    CN: ["zh", "en"],
+    RU: ["ru", "en"],
+    TR: ["tr", "en"],
+    US: ["en"],
+    GB: ["en"],
+    CA: ["en", "fr"],
+    AU: ["en"],
   };
 
-  const languages = countryToLanguage[region] || ['en'];
+  // Get languages for that region
+  const languages = countryToLanguage[region] || ["en"];
 
   const headers = {
     Authorization: `Bearer ${process.env.TMDB_TOKEN}`,
-    Accept: "application/json"
+    Accept: "application/json",
   };
 
-  async function fetchJson(endpoint: string) {
+  async function fetchJson(url: string) {
     try {
-      const res = await fetch(endpoint, { headers });
-      return await res.json();
-    } catch (e) {
-      console.error("Fetch error:", endpoint, e);
-      return { results: [] };
+      const r = await fetch(url, { headers, cache: "no-store" });
+      return await r.json();
+    } catch (err) {
+      console.error("Error fetching", url, err);
+      return { results: [], total_pages: 0 };
     }
   }
 
-  // ---- 1. Regional Movies (by language) ----
-  const regionalResults = [];
-  
-  console.log(`\n🌍 Fetching movies for region: ${region}, languages: ${languages.join(', ')}, year: ${year}`);
-  
-  for (const language of languages) {
-    const endpoint = `https://api.themoviedb.org/3/discover/movie?` +
-      new URLSearchParams({
-        with_original_language: language,
-        primary_release_year: year,
-        include_adult: "false",
-        sort_by: "popularity.desc",
-        page
-      });
-    
-    console.log(`🎬 Fetching ${language} movies from: ${endpoint}`);
-    
-    const data = await fetchJson(endpoint);
-    
-    console.log(`✅ ${language} results: ${data.results?.length || 0} movies`);
-    if (data.results && data.results.length > 0) {
-      console.log(`   Top 3 ${language} movies:`, data.results.slice(0, 3).map((m: any) => m.title));
+  // ---- Auto-pagination function ----
+  async function fetchAllPages(baseUrl: string) {
+    const first = await fetchJson(`${baseUrl}&page=1`);
+    const totalPages = Math.min(first.total_pages || 1, 20);
+
+    let results = [...(first.results || [])];
+
+    const promises = [];
+    for (let p = 2; p <= totalPages; p++) {
+      promises.push(fetchJson(`${baseUrl}&page=${p}`));
     }
-    
-    if (data.results) {
-      regionalResults.push(...data.results);
+
+    const pages = await Promise.all(promises);
+    for (const pg of pages) {
+      results.push(...(pg.results || []));
     }
+
+    return results;
   }
-  
-  console.log(`📊 Total regional movies fetched: ${regionalResults.length}`);
 
-  // ---- 2. Global Movies (English fallback) ----
-  const globalData = await fetchJson(
-    `https://api.themoviedb.org/3/discover/movie?` +
+  // -------------------------------
+  // 1. Fetch movies for ALL languages (regional + English)
+  // -------------------------------
+  let allMovies: any[] = [];
+
+  for (const lang of languages) {
+    const baseUrl =
+      "https://api.themoviedb.org/3/discover/movie?" +
       new URLSearchParams({
+        with_original_language: lang,
         primary_release_year: year,
         include_adult: "false",
         sort_by: "popularity.desc",
-        page
-      })
-  );
+      }).toString();
 
-  // ---- Combine ----
-  let combined = [
-    ...regionalResults,
-    ...(globalData.results || [])
-  ];
+    const movies = await fetchAllPages(baseUrl);
 
-  // ---- Deduplicate ----
-  const unique = Array.from(new Map(combined.map((m) => [m.id, m])).values());
+    console.log(`🌐 ${lang}: ${movies.length} movies for year ${year}`);
+    allMovies.push(...movies);
+  }
 
-  // ---- Sort by popularity ----
+  // -------------------------------
+  // 2. Deduplicate
+  // -------------------------------
+  const unique = Array.from(new Map(allMovies.map((m) => [m.id, m])).values());
+
+  // -------------------------------
+  // 3. Sort by popularity
+  // -------------------------------
   unique.sort((a, b) => b.popularity - a.popularity);
 
-  return NextResponse.json({ results: unique });
+  return NextResponse.json({
+    total: unique.length,
+    results: unique,
+  });
 }
