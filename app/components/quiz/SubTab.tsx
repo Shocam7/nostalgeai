@@ -93,6 +93,8 @@ const SubTab = ({
 
   const fetchMoviesFromTMDB = async (year: number) => {
     try {
+
+      {/* Decorative elements */}
       <div className="absolute top-20 left-10 w-3 h-3 bg-white/30 rounded-full animate-pulse"></div>
       <div className="absolute top-40 right-16 w-2 h-2 bg-white/25 rounded-full animate-pulse delay-1000"></div>
       <div className="absolute bottom-32 left-20 w-4 h-4 bg-white/20 rounded-full animate-pulse delay-500"></div>
