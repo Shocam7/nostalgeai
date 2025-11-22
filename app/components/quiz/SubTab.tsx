@@ -91,37 +91,30 @@ const SubTab = ({
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
   const isMovieCategory = categoryId === 'movies';
 
+    // Fetch movies from TMDB API via server-side proxy
   const fetchMoviesFromTMDB = async (year: number) => {
-    try {
-
-      {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-3 h-3 bg-white/30 rounded-full animate-pulse"></div>
-      <div className="absolute top-40 right-16 w-2 h-2 bg-white/25 rounded-full animate-pulse delay-1000"></div>
-      <div className="absolute bottom-32 left-20 w-4 h-4 bg-white/20 rounded-full animate-pulse delay-500"></div>
-    </div>
-  );
-};
-
-export default SubTab;console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
-      
-      const response = await fetch(
-        `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch movies from proxy');
-      }
-
-      const data = await response.json();
-      const movies = data.results || [];
-
-      console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
-      return movies;
-    } catch (error) {
-      console.error('Error fetching from TMDB:', error);
-      throw error;
+  try {
+    console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
+    
+    // The proxy already handles pagination internally, so just make ONE call
+    const response = await fetch(
+      `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch movies from proxy');
     }
-  };
+
+    const data = await response.json();
+    const movies = data.results || [];
+
+    console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
+    return movies;
+  } catch (error) {
+    console.error('Error fetching from TMDB:', error);
+    throw error;
+  }
+};
 
   useEffect(() => {
     const fetchItems = async () => {
