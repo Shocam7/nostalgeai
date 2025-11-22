@@ -12,7 +12,7 @@ interface SubTabProps {
     shadow: string;
   };
   currentYear: number;
-  userCountryCode: string;   // <-- ADD THIS
+  userCountryCode: string;
   onSave: (memories: string[]) => void;
   onSkipMemory: () => void;
   onSkipYear: () => void;
@@ -20,7 +20,6 @@ interface SubTabProps {
   isAnimatingIn: boolean;
   isAnimatingOut: boolean;
 }
-
 
 interface DatabaseItem {
   id: number;
@@ -59,14 +58,12 @@ const selectionPrompts = {
   ]
 };
 
-// Use server-side proxy to bypass geo-restrictions
-
 const SubTab = ({ 
   categoryId, 
   categoryName, 
   gradient, 
   currentYear, 
-  userCountryCode,   // <-- ADD THIS
+  userCountryCode,
   onSave, 
   onSkipMemory, 
   onSkipYear, 
@@ -92,36 +89,38 @@ const SubTab = ({
   ];
 
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-
-  // Check if we're in movies category for card interface
   const isMovieCategory = categoryId === 'movies';
 
-  // Fetch movies from TMDB API via server-side proxy
   const fetchMoviesFromTMDB = async (year: number) => {
-  try {
-    console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
-    
-    // The proxy already handles pagination internally, so just make ONE call
-    const response = await fetch(
-      `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch movies from proxy');
-    }
-
-    const data = await response.json();
-    const movies = data.results || [];
-
-    console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
-    return movies;
-  } catch (error) {
-    console.error('Error fetching from TMDB:', error);
-    throw error;
-  }
+    try {
+      <div className="absolute top-20 left-10 w-3 h-3 bg-white/30 rounded-full animate-pulse"></div>
+      <div className="absolute top-40 right-16 w-2 h-2 bg-white/25 rounded-full animate-pulse delay-1000"></div>
+      <div className="absolute bottom-32 left-20 w-4 h-4 bg-white/20 rounded-full animate-pulse delay-500"></div>
+    </div>
+  );
 };
 
-  // Fetch items from database or TMDB
+export default SubTab;console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
+      
+      const response = await fetch(
+        `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch movies from proxy');
+      }
+
+      const data = await response.json();
+      const movies = data.results || [];
+
+      console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
+      return movies;
+    } catch (error) {
+      console.error('Error fetching from TMDB:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -129,11 +128,9 @@ const SubTab = ({
         setError(null);
 
         if (categoryId === 'movies') {
-          // Fetch from TMDB API for movies
           const movies = await fetchMoviesFromTMDB(currentYear);
           setAvailableItems(movies);
         } else {
-          // Fetch from database for other categories
           const tableName = categoryId === 'tv' ? 'tv_shows' :
                            categoryId === 'music' ? 'songs' :
                            categoryId === 'games' ? 'games' :
@@ -162,12 +159,10 @@ const SubTab = ({
     fetchItems();
   }, [categoryId, currentYear]);
 
-  // Filter items based on search query and sort by popularity
   const filteredItems = availableItems
     .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
-  // Card swipe handlers for movies
   const handleSwipeLeft = () => {
     setSwipeDirection('left');
     setTimeout(() => {
@@ -175,7 +170,7 @@ const SubTab = ({
       setSwipeDirection(null);
       setDragOffset({ x: 0, y: 0 });
       setRotation(0);
-    }, 300);
+    }, 400);
   };
 
   const handleSwipeRight = () => {
@@ -189,7 +184,7 @@ const SubTab = ({
       setSwipeDirection(null);
       setDragOffset({ x: 0, y: 0 });
       setRotation(0);
-    }, 300);
+    }, 400);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -250,7 +245,6 @@ const SubTab = ({
     }
   };
 
-  // List-based handlers for non-movies
   const toggleItemSelection = (item: DatabaseItem) => {
     const isSelected = selectedItems.some(selected => selected.id === item.id);
     
@@ -270,11 +264,10 @@ const SubTab = ({
     onSave(memoryStrings);
   };
 
-  // Render card stack for movies
   const renderCardStack = () => {
     if (currentIndex >= filteredItems.length) {
       return (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pb-32">
           <div className="text-center text-white max-w-md">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
               <svg className="w-20 h-20 mx-auto mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,43 +290,72 @@ const SubTab = ({
     const afterNextCard = filteredItems[currentIndex + 2];
 
     return (
-      <div className="flex-1 flex items-center justify-center px-6 relative">
+      <div className="flex-1 flex items-center justify-center px-6 relative pb-32">
         <div className="relative w-full max-w-md h-[500px]">
-          {/* Stack of cards behind */}
           {afterNextCard && (
             <div 
-              className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
+              className="absolute inset-0 rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
               style={{
                 transform: 'scale(0.88) translateY(16px)',
-                zIndex: 1
+                zIndex: 1,
+                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
-            />
+            >
+              {afterNextCard.poster_path ? (
+                <>
+                  <img 
+                    src={`https://image.tmdb.org/t/p/w500${afterNextCard.poster_path}`}
+                    alt={afterNextCard.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/30" />
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center p-8">
+                  <h3 className="text-2xl font-medium text-white text-center leading-tight"
+                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                    {afterNextCard.title}
+                  </h3>
+                </div>
+              )}
+            </div>
           )}
           
           {nextCard && (
             <div 
-              className="absolute inset-0 bg-white/15 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
+              className="absolute inset-0 rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
               style={{
                 transform: 'scale(0.94) translateY(8px)',
-                zIndex: 2
+                zIndex: 2,
+                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
-              <div className="flex flex-col items-center justify-center h-full p-8">
-                <h3 className="text-3xl font-medium text-white text-center leading-tight"
-                    style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                  {nextCard.title}
-                </h3>
-              </div>
+              {nextCard.poster_path ? (
+                <>
+                  <img 
+                    src={`https://image.tmdb.org/t/p/w500${nextCard.poster_path}`}
+                    alt={nextCard.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/20" />
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-white/15 backdrop-blur-md flex items-center justify-center p-8">
+                  <h3 className="text-3xl font-medium text-white text-center leading-tight"
+                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                    {nextCard.title}
+                  </h3>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Active card */}
           <div 
             ref={cardRef}
             className="absolute inset-0 rounded-3xl shadow-2xl cursor-grab active:cursor-grabbing select-none overflow-hidden"
             style={{
               transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
-              transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transition: isDragging ? 'none' : swipeDirection ? 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
               zIndex: 3,
               opacity: swipeDirection ? 0 : 1
             }}
@@ -345,21 +367,24 @@ const SubTab = ({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Movie Poster Background */}
             {currentCard.poster_path ? (
-              <>
-                <img 
-                  src={`https://image.tmdb.org/t/p/w500${currentCard.poster_path}`}
-                  alt={currentCard.title}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              </>
+              <img 
+                src={`https://image.tmdb.org/t/p/w500${currentCard.poster_path}`}
+                alt={currentCard.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
             ) : (
-              <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30" />
+              <>
+                <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30" />
+                <div className="relative flex items-center justify-center h-full p-8">
+                  <h3 className="text-4xl font-medium text-white leading-tight text-center"
+                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                    {currentCard.title}
+                  </h3>
+                </div>
+              </>
             )}
 
-            {/* Swipe indicators */}
             <div 
               className="absolute top-8 left-8 px-6 py-3 bg-red-500/80 backdrop-blur-sm rounded-2xl border-4 border-red-400 transform -rotate-12 transition-opacity duration-200"
               style={{
@@ -383,37 +408,9 @@ const SubTab = ({
                 SAVE
               </span>
             </div>
-
-            {/* Card content */}
-            <div className="relative flex flex-col items-center justify-end h-full p-8">
-              <div className="text-center space-y-6 w-full">
-                <h3 className="text-4xl font-medium text-white leading-tight drop-shadow-lg"
-                    style={{fontFamily: 'Crimson Text, Times New Roman, serif', textShadow: '0 2px 10px rgba(0,0,0,0.7)'}}>
-                  {currentCard.title}
-                </h3>
-                
-                {currentCard.popularity && (
-                  <div className="flex items-center justify-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 shadow-lg">
-                    <svg className="w-5 h-5 text-yellow-300 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                    <span className="text-white font-medium text-lg">
-                      {currentCard.popularity}/10
-                    </span>
-                  </div>
-                )}
-
-                <div className="pt-4">
-                  <p className="text-white/90 text-base drop-shadow-md" style={{fontFamily: 'Crimson Text, Times New Roman, serif', textShadow: '0 1px 4px rgba(0,0,0,0.5)'}}>
-                    Swipe right to save • Swipe left to skip
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Bottom action buttons */}
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-6 pb-6">
           <button 
             onClick={handleSwipeLeft}
@@ -437,11 +434,9 @@ const SubTab = ({
     );
   };
 
-  // Render list view for non-movies
   const renderListView = () => {
     return (
       <>
-        {/* Search Section */}
         <div className="max-w-2xl mx-auto w-full mb-6 flex-shrink-0">
           <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-xl">
             <input
@@ -455,7 +450,6 @@ const SubTab = ({
           </div>
         </div>
 
-        {/* Items List */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {loading ? (
             <div className="text-center text-white/60 mt-16">
@@ -485,14 +479,11 @@ const SubTab = ({
                   <div 
                     key={item.id} 
                     onClick={() => toggleItemSelection(item)}
-                    className={`bg-white/15 backdrop-blur-md rounded-xl p-4 border transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer animate-in slide-in-from-bottom-3 duration-300 ${
+                    className={`bg-white/15 backdrop-blur-md rounded-xl p-4 border transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer ${
                       selected 
                         ? 'border-white/50 bg-white/25 ring-2 ring-white/30' 
                         : 'border-white/20 hover:bg-white/20'
                     }`}
-                    style={{
-                      animationDelay: `${index * 50}ms`
-                    }}
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
@@ -556,7 +547,6 @@ const SubTab = ({
 
   return (
     <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} h-full w-full flex flex-col`}>
-      {/* Header */}
       <div className="flex items-center justify-between p-6 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
@@ -575,21 +565,20 @@ const SubTab = ({
         />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
-        {/* Title Section */}
-        <div className="text-center mb-8 flex-shrink-0">
-          <h2 className="text-3xl sm:text-4xl font-medium text-white leading-tight mb-4"
-              style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            {categoryName} in {currentYear}
-          </h2>
-          <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed"
-             style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-            {isMovieCategory ? 'Swipe right to save, left to skip' : `${selectedPrompt} ${currentYear}`}
-          </p>
-        </div>
+        {!isMovieCategory && (
+          <div className="text-center mb-8 flex-shrink-0">
+            <h2 className="text-3xl sm:text-4xl font-medium text-white leading-tight mb-4"
+                style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              {categoryName} in {currentYear}
+            </h2>
+            <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed"
+               style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+              {selectedPrompt} {currentYear}
+            </p>
+          </div>
+        )}
 
-        {/* Conditional rendering based on category */}
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-white/60">
@@ -617,7 +606,6 @@ const SubTab = ({
         ) : isMovieCategory ? renderCardStack() : renderListView()}
       </div>
 
-      {/* Fixed Footer with Save Button */}
       <div className="bg-black/20 backdrop-blur-sm border-t border-white/20 px-6 py-4 flex-shrink-0">
         <div className="max-w-md mx-auto">
           <button 
