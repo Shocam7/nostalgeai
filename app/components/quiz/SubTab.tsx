@@ -21,6 +21,7 @@ interface SubTabProps {
   isAnimatingOut: boolean;
 }
 
+
 interface DatabaseItem {
   id: number;
   title: string;
@@ -89,33 +90,35 @@ const SubTab = ({
   ];
 
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+
+  // Check if we're in movies category for card interface
   const isMovieCategory = categoryId === 'movies';
 
-    // Fetch movies from TMDB API via server-side proxy
+  // Fetch movies from TMDB API via server-side proxy
   const fetchMoviesFromTMDB = async (year: number) => {
-  try {
-    console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
-    
-    // The proxy already handles pagination internally, so just make ONE call
-    const response = await fetch(
-      `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch movies from proxy');
+    try {
+      console.log('🎬 Fetching movies for year:', year, 'region:', userCountryCode);
+      
+      const response = await fetch(
+        `/api/tmdb-proxy?year=${year}&region=${userCountryCode}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch movies from proxy');
+      }
+
+      const data = await response.json();
+      const movies = data.results || [];
+
+      console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
+      return movies;
+    } catch (error) {
+      console.error('Error fetching from TMDB:', error);
+      throw error;
     }
+  };
 
-    const data = await response.json();
-    const movies = data.results || [];
-
-    console.log(`✅ Fetched ${movies.length} movies for region ${userCountryCode}`);
-    return movies;
-  } catch (error) {
-    console.error('Error fetching from TMDB:', error);
-    throw error;
-  }
-};
-
+  // Fetch items from database or TMDB
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -123,9 +126,11 @@ const SubTab = ({
         setError(null);
 
         if (categoryId === 'movies') {
+          // Fetch from TMDB API for movies
           const movies = await fetchMoviesFromTMDB(currentYear);
           setAvailableItems(movies);
         } else {
+          // Fetch from database for other categories
           const tableName = categoryId === 'tv' ? 'tv_shows' :
                            categoryId === 'music' ? 'songs' :
                            categoryId === 'games' ? 'games' :
@@ -154,18 +159,21 @@ const SubTab = ({
     fetchItems();
   }, [categoryId, currentYear]);
 
+  // Filter items based on search query and sort by popularity
   const filteredItems = availableItems
     .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
+  // Card swipe handlers for movies
   const handleSwipeLeft = () => {
     setSwipeDirection('left');
+    // Wait for animation to complete before switching data
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
       setSwipeDirection(null);
       setDragOffset({ x: 0, y: 0 });
       setRotation(0);
-    }, 400);
+    }, 400); // Matched to transition duration
   };
 
   const handleSwipeRight = () => {
@@ -197,7 +205,7 @@ const SubTab = ({
     const deltaX = e.clientX - startPosRef.current.x;
     const deltaY = e.clientY - startPosRef.current.y;
     setDragOffset({ x: deltaX, y: deltaY });
-    setRotation(deltaX * 0.1);
+    setRotation(deltaX * 0.08); // Reduced rotation slightly for smoother feel
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -205,7 +213,7 @@ const SubTab = ({
     const deltaX = e.touches[0].clientX - startPosRef.current.x;
     const deltaY = e.touches[0].clientY - startPosRef.current.y;
     setDragOffset({ x: deltaX, y: deltaY });
-    setRotation(deltaX * 0.1);
+    setRotation(deltaX * 0.08);
   };
 
   const handleMouseUp = () => {
@@ -219,6 +227,7 @@ const SubTab = ({
         handleSwipeLeft();
       }
     } else {
+      // Snap back
       setDragOffset({ x: 0, y: 0 });
       setRotation(0);
     }
@@ -259,10 +268,11 @@ const SubTab = ({
     onSave(memoryStrings);
   };
 
+  // Render card stack for movies
   const renderCardStack = () => {
     if (currentIndex >= filteredItems.length) {
       return (
-        <div className="flex-1 flex items-center justify-center pb-32">
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center text-white max-w-md">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
               <svg className="w-20 h-20 mx-auto mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,75 +294,77 @@ const SubTab = ({
     const nextCard = filteredItems[currentIndex + 1];
     const afterNextCard = filteredItems[currentIndex + 2];
 
+    // Calculate transform style dynamically for the exit animation
+    const getCardStyle = () => {
+      if (swipeDirection) {
+        const xTrans = swipeDirection === 'right' ? 1000 : -1000;
+        return {
+          transform: `translate(${xTrans}px, ${dragOffset.y + 50}px) rotate(${swipeDirection === 'right' ? 30 : -30}deg)`,
+          opacity: 0,
+          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' // Smooth throw animation
+        };
+      }
+      return {
+        transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
+        transition: isDragging ? 'none' : 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)', // Smooth snap back
+        opacity: 1
+      };
+    };
+
     return (
-      <div className="flex-1 flex items-center justify-center px-6 relative pb-32">
-        <div className="relative w-full max-w-md h-[500px]">
+      <div className="flex-1 flex flex-col items-center justify-center w-full h-full relative z-0">
+        {/* 
+           Container for the cards. 
+           Using responsive height (h-[60vh]) to ensure it doesn't overlap headers/footers 
+           and max-w for card shape maintenance.
+        */}
+        <div className="relative w-full max-w-[340px] sm:max-w-md h-[55vh] max-h-[600px] min-h-[380px] mb-6">
+          
+          {/* Stack of cards behind */}
           {afterNextCard && (
             <div 
-              className="absolute inset-0 rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
+              className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
               style={{
-                transform: 'scale(0.88) translateY(16px)',
-                zIndex: 1,
-                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                transform: 'scale(0.88) translateY(20px)',
+                zIndex: 1
               }}
-            >
-              {afterNextCard.poster_path ? (
-                <>
-                  <img 
-                    src={`https://image.tmdb.org/t/p/w500${afterNextCard.poster_path}`}
-                    alt={afterNextCard.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/30" />
-                </>
-              ) : (
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center p-8">
-                  <h3 className="text-2xl font-medium text-white text-center leading-tight"
-                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                    {afterNextCard.title}
-                  </h3>
-                </div>
-              )}
-            </div>
+            />
           )}
           
           {nextCard && (
             <div 
-              className="absolute inset-0 rounded-3xl border border-white/20 shadow-2xl overflow-hidden"
+              className="absolute inset-0 bg-white/15 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl"
               style={{
-                transform: 'scale(0.94) translateY(8px)',
-                zIndex: 2,
-                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                transform: 'scale(0.94) translateY(10px)',
+                zIndex: 2
               }}
             >
-              {nextCard.poster_path ? (
-                <>
-                  <img 
-                    src={`https://image.tmdb.org/t/p/w500${nextCard.poster_path}`}
-                    alt={nextCard.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/20" />
-                </>
-              ) : (
-                <div className="absolute inset-0 bg-white/15 backdrop-blur-md flex items-center justify-center p-8">
-                  <h3 className="text-3xl font-medium text-white text-center leading-tight"
-                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                    {nextCard.title}
-                  </h3>
-                </div>
+              {/* Only show title on back card if no poster (simulating content) */}
+              {!nextCard.poster_path && (
+                 <div className="flex flex-col items-center justify-center h-full p-8">
+                   <h3 className="text-3xl font-medium text-white text-center leading-tight"
+                       style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
+                     {nextCard.title}
+                   </h3>
+                 </div>
+              )}
+              {nextCard.poster_path && (
+                 <img 
+                  src={`https://image.tmdb.org/t/p/w500${nextCard.poster_path}`}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover rounded-3xl opacity-50"
+                />
               )}
             </div>
           )}
 
+          {/* Active card */}
           <div 
             ref={cardRef}
-            className="absolute inset-0 rounded-3xl shadow-2xl cursor-grab active:cursor-grabbing select-none overflow-hidden"
+            className="absolute inset-0 rounded-3xl shadow-2xl cursor-grab active:cursor-grabbing select-none overflow-hidden bg-black"
             style={{
-              transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
-              transition: isDragging ? 'none' : swipeDirection ? 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              zIndex: 3,
-              opacity: swipeDirection ? 0 : 1
+              ...getCardStyle(),
+              zIndex: 3
             }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -362,26 +374,24 @@ const SubTab = ({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
+            {/* Movie Poster Background */}
             {currentCard.poster_path ? (
-              <img 
-                src={`https://image.tmdb.org/t/p/w500${currentCard.poster_path}`}
-                alt={currentCard.title}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
               <>
-                <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30" />
-                <div className="relative flex items-center justify-center h-full p-8">
-                  <h3 className="text-4xl font-medium text-white leading-tight text-center"
-                      style={{fontFamily: 'Crimson Text, Times New Roman, serif'}}>
-                    {currentCard.title}
-                  </h3>
-                </div>
+                <img 
+                  src={`https://image.tmdb.org/t/p/w500${currentCard.poster_path}`}
+                  alt={currentCard.title}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  draggable={false}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               </>
+            ) : (
+              <div className="absolute inset-0 bg-white/20 backdrop-blur-md border border-white/30 pointer-events-none" />
             )}
 
+            {/* Swipe indicators */}
             <div 
-              className="absolute top-8 left-8 px-6 py-3 bg-red-500/80 backdrop-blur-sm rounded-2xl border-4 border-red-400 transform -rotate-12 transition-opacity duration-200"
+              className="absolute top-8 left-8 px-6 py-3 bg-red-500/80 backdrop-blur-sm rounded-2xl border-4 border-red-400 transform -rotate-12 transition-opacity duration-200 pointer-events-none"
               style={{
                 opacity: dragOffset.x < -50 ? 1 : 0,
                 zIndex: 10
@@ -393,7 +403,7 @@ const SubTab = ({
             </div>
             
             <div 
-              className="absolute top-8 right-8 px-6 py-3 bg-green-500/80 backdrop-blur-sm rounded-2xl border-4 border-green-400 transform rotate-12 transition-opacity duration-200"
+              className="absolute top-8 right-8 px-6 py-3 bg-green-500/80 backdrop-blur-sm rounded-2xl border-4 border-green-400 transform rotate-12 transition-opacity duration-200 pointer-events-none"
               style={{
                 opacity: dragOffset.x > 50 ? 1 : 0,
                 zIndex: 10
@@ -403,24 +413,45 @@ const SubTab = ({
                 SAVE
               </span>
             </div>
+
+            {/* Card content */}
+            <div className="relative flex flex-col items-center justify-end h-full p-8 pointer-events-none">
+              <div className="text-center space-y-6 w-full">
+                
+                {/* 
+                    Requirement: Don't show name if poster exists. 
+                    Show name if poster is missing.
+                */}
+                {!currentCard.poster_path && (
+                  <h3 className="text-4xl font-medium text-white leading-tight drop-shadow-lg"
+                      style={{fontFamily: 'Crimson Text, Times New Roman, serif', textShadow: '0 2px 10px rgba(0,0,0,0.7)'}}>
+                    {currentCard.title}
+                  </h3>
+                )}
+                
+                {/* Requirement: Popularity element removed */}
+
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-6 pb-6">
+        {/* Bottom action buttons - Moved inside the flex container to prevent overlap with footer */}
+        <div className="flex gap-8 justify-center items-center z-10 pb-4">
           <button 
             onClick={handleSwipeLeft}
-            className="w-16 h-16 rounded-full bg-red-500/80 hover:bg-red-500 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center"
+            className="w-16 h-16 rounded-full bg-red-500/20 hover:bg-red-500/40 backdrop-blur-sm border-2 border-white/30 shadow-lg transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center group"
           >
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           
           <button 
             onClick={handleSwipeRight}
-            className="w-16 h-16 rounded-full bg-green-500/80 hover:bg-green-500 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center"
+            className="w-16 h-16 rounded-full bg-green-500/20 hover:bg-green-500/40 backdrop-blur-sm border-2 border-white/30 shadow-lg transition-all duration-200 transform hover:scale-110 active:scale-95 flex items-center justify-center group"
           >
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
@@ -429,9 +460,11 @@ const SubTab = ({
     );
   };
 
+  // Render list view for non-movies
   const renderListView = () => {
     return (
       <>
+        {/* Search Section */}
         <div className="max-w-2xl mx-auto w-full mb-6 flex-shrink-0">
           <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-xl">
             <input
@@ -445,6 +478,7 @@ const SubTab = ({
           </div>
         </div>
 
+        {/* Items List */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {loading ? (
             <div className="text-center text-white/60 mt-16">
@@ -474,11 +508,14 @@ const SubTab = ({
                   <div 
                     key={item.id} 
                     onClick={() => toggleItemSelection(item)}
-                    className={`bg-white/15 backdrop-blur-md rounded-xl p-4 border transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer ${
+                    className={`bg-white/15 backdrop-blur-md rounded-xl p-4 border transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] cursor-pointer animate-in slide-in-from-bottom-3 duration-300 ${
                       selected 
                         ? 'border-white/50 bg-white/25 ring-2 ring-white/30' 
                         : 'border-white/20 hover:bg-white/20'
                     }`}
+                    style={{
+                      animationDelay: `${index * 50}ms`
+                    }}
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
@@ -542,6 +579,7 @@ const SubTab = ({
 
   return (
     <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} h-full w-full flex flex-col`}>
+      {/* Header */}
       <div className="flex items-center justify-between p-6 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
@@ -560,7 +598,10 @@ const SubTab = ({
         />
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
+        
+        {/* Title Section - HIDDEN for Movies (Requirement 1) */}
         {!isMovieCategory && (
           <div className="text-center mb-8 flex-shrink-0">
             <h2 className="text-3xl sm:text-4xl font-medium text-white leading-tight mb-4"
@@ -574,6 +615,7 @@ const SubTab = ({
           </div>
         )}
 
+        {/* Conditional rendering based on category */}
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-white/60">
@@ -601,7 +643,8 @@ const SubTab = ({
         ) : isMovieCategory ? renderCardStack() : renderListView()}
       </div>
 
-      <div className="bg-black/20 backdrop-blur-sm border-t border-white/20 px-6 py-4 flex-shrink-0">
+      {/* Fixed Footer with Save Button */}
+      <div className="bg-black/20 backdrop-blur-sm border-t border-white/20 px-6 py-4 flex-shrink-0 z-20">
         <div className="max-w-md mx-auto">
           <button 
             onClick={handleSave}
@@ -637,9 +680,9 @@ const SubTab = ({
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-3 h-3 bg-white/30 rounded-full animate-pulse"></div>
-      <div className="absolute top-40 right-16 w-2 h-2 bg-white/25 rounded-full animate-pulse delay-1000"></div>
-      <div className="absolute bottom-32 left-20 w-4 h-4 bg-white/20 rounded-full animate-pulse delay-500"></div>
+      <div className="absolute top-20 left-10 w-3 h-3 bg-white/30 rounded-full animate-pulse pointer-events-none"></div>
+      <div className="absolute top-40 right-16 w-2 h-2 bg-white/25 rounded-full animate-pulse delay-1000 pointer-events-none"></div>
+      <div className="absolute bottom-32 left-20 w-4 h-4 bg-white/20 rounded-full animate-pulse delay-500 pointer-events-none"></div>
     </div>
   );
 };
