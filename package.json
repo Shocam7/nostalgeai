@@ -16,7 +16,8 @@
     "@supabase/supabase-js": "^2.44.4",
     "pg": "^8.11.3",
     "@vercel/blob": "^0.23.4",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "@aws-sdk/client-s3": "^3.657.0"
   },
   "devDependencies": {
     "typescript": "^5",
