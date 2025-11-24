@@ -1,3 +1,5 @@
+// app/api/b2/sign-url/route.ts
+
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
