@@ -1,3 +1,5 @@
+// app/api/tmdb/trending/route.ts
+
 import { NextResponse } from "next/server";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
