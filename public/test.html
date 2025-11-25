@@ -2,8 +2,9 @@
 <html>
   <body>
     <h2>Backblaze Upload Test</h2>
+
     <input id="file" type="file" />
-    <p id="status"></p>
+    <pre id="status" style="white-space: pre-wrap;"></pre>
 
     <script>
       const input = document.getElementById("file");
@@ -18,18 +19,21 @@
         status.innerText = "Uploading...";
 
         try {
-          const res = await fetch("app/api/b2/upload", {
+          const res = await fetch("/api/b2/upload", {
             method: "POST",
             body: fd
           });
-          const data = await res.json();
-          if (res.ok) {
-            status.innerText = "Success! Key: " + data.key;
-          } else {
-            status.innerText = "Failed: " + JSON.stringify(data);
+
+          const text = await res.text();
+
+          try {
+            const json = JSON.parse(text);
+            status.innerText = JSON.stringify(json, null, 2);
+          } catch {
+            status.innerText = "Non-JSON response:\n" + text;
           }
         } catch (err) {
-          status.innerText = "Error: " + err.message;
+          status.innerText = "JS Error:\n" + err.message;
         }
       };
     </script>
