@@ -12,25 +12,37 @@ const b2 = new S3Client({
 });
 
 export async function POST(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file") as File;
-  const memoryId = form.get("memoryId") as string;
+  try {
+    const form = await req.formData();
+    const file = form.get("file") as File;
+    const memoryId = form.get("memoryId") as string;
 
-  if (!file || !memoryId) {
-    return new Response("Missing data", { status: 400 });
+    if (!file || !memoryId) {
+      return Response.json({ error: "Missing file or memoryId" }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const key = `${memoryId}/${crypto.randomUUID()}.mp4`;
+
+    const upload = await b2.send(
+      new PutObjectCommand({
+        Bucket: process.env.B2_BUCKET!,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type
+      })
+    );
+
+    return Response.json({
+      success: true,
+      key,
+      upload
+    });
+  } catch (err: any) {
+    console.error("Upload error:", err);
+    return Response.json(
+      { error: err.message || "Unknown server error" },
+      { status: 500 }
+    );
   }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const key = `${memoryId}/${crypto.randomUUID()}.mp4`;
-
-  await b2.send(
-    new PutObjectCommand({
-      Bucket: process.env.B2_BUCKET!,
-      Key: key,
-      Body: buffer,
-      ContentType: file.type
-    })
-  );
-
-  return Response.json({ key });
 }
