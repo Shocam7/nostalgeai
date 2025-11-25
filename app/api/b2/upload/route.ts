@@ -5,6 +5,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 const b2 = new S3Client({
   region: process.env.B2_REGION,
   endpoint: process.env.B2_ENDPOINT,
+  forcePathStyle: true, // REQUIRED for Backblaze B2
   credentials: {
     accessKeyId: process.env.B2_KEY_ID!,
     secretAccessKey: process.env.B2_APP_KEY!,
@@ -14,17 +15,27 @@ const b2 = new S3Client({
 export async function POST(req: Request) {
   try {
     const form = await req.formData();
-    const file = form.get("file") as File;
-    const memoryId = form.get("memoryId") as string;
+
+    const file = form.get("file") as File | null;
+    const memoryId = form.get("memoryId") as string | null;
 
     if (!file || !memoryId) {
-      return Response.json({ error: "Missing file or memoryId" }, { status: 400 });
+      return Response.json(
+        { error: "Missing file or memoryId" },
+        { status: 400 }
+      );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const key = `${memoryId}/${crypto.randomUUID()}.mp4`;
+    // Extract extension from uploaded file safely
+    const name = file.name || "";
+    const ext = name.includes(".") ? name.split(".").pop() : "bin";
 
-    const upload = await b2.send(
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Final key saved in Backblaze
+    const key = `${memoryId}/${crypto.randomUUID()}.${ext}`;
+
+    const uploadResult = await b2.send(
       new PutObjectCommand({
         Bucket: process.env.B2_BUCKET!,
         Key: key,
@@ -36,12 +47,14 @@ export async function POST(req: Request) {
     return Response.json({
       success: true,
       key,
-      upload
+      contentType: file.type,
+      b2Response: uploadResult
     });
   } catch (err: any) {
     console.error("Upload error:", err);
+
     return Response.json(
-      { error: err.message || "Unknown server error" },
+      { error: err.message ?? "Unknown server error" },
       { status: 500 }
     );
   }
