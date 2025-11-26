@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import MoviesManager from "@/components/MoviesManager";
-import { CartoonCard } from "@/components/CartoonUI";
+import MoviesManager from "@/app/components/MoviesManager";
+import { CartoonCard } from "@/app/components/CartoonUI";
 
 // Define the memory classes
 const memoryClasses = [
