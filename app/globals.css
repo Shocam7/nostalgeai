@@ -18,7 +18,7 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* New Comic/Bat theme */
+  /* Batman theme palette */
   --bat-bg: #121212;
   --bat-card: #1E1E1E;
   --bat-yellow: #FFD700;
@@ -26,7 +26,7 @@
   --bat-gray: #7F8C8D;
   --bat-white: #ECF0F1;
 
-  /* Tailwind theme vars (keep these) */
+  /* Tailwind theme vars */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -38,7 +38,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark mode update for original theme */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -46,48 +45,103 @@
   }
 }
 
+
+
 /* --------------------------------------------- */
-/*               Base Body Styling               */
+/*                GLOBAL BASE STYLES             */
 /* --------------------------------------------- */
 
 body {
-  /* Replace solid color with your public image */
-  background-color: var(--bat-bg); /* fallback */
-
-  /* Layered background: Batman image + comic dots */
-  background-image:
-    radial-gradient(#2a2a2a 1px, transparent 1px),
-    url("/batman.jpeg");
-
-  /* Dot pattern */
-  background-size:
-    20px 20px, /* dots */
-    cover;     /* image */
-
-  background-position:
-    0 0,
-    center;
-
-  background-repeat:
-    repeat,
-    no-repeat;
-
-  color: var(--bat-white);
-  font-family: 'Rajdhani', sans-serif;
-  overflow-x: hidden;
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 
-/* Comic Font Headings */
-h1, h2, h3, h4, .comic-font {
+
+/* --------------------------------------------- */
+/*                BATMAN THEME                   */
+/* --------------------------------------------- */
+/* Apply these ONLY inside a wrapper:
+   <div class="batman-theme"> ... </div>
+*/
+
+.batman-theme {
+  background-color: var(--bat-bg);
+  background-image:
+    radial-gradient(#2a2a2a 1px, transparent 1px),
+    url("/batman.jpeg");
+  background-size: 20px 20px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  color: var(--bat-white);
+  font-family: 'Rajdhani', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Make all content stay above glow layer */
+.batman-theme * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Batman glow spotlight */
+.batman-theme::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 0% 50%,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.05) 35%,
+    rgba(0, 0, 0, 0) 70%
+  );
+  width: 200%;
+  height: 200%;
+  animation: bat-spotlight 10s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+/* Headings in Batman theme */
+.batman-theme h1,
+.batman-theme h2,
+.batman-theme h3,
+.batman-theme h4,
+.batman-theme .comic-font {
   font-family: 'Black Ops One', sans-serif;
   letter-spacing: 2px;
 }
 
-/* Batflicker */
-.flicker-text {
+/* Yellow for main headings */
+.batman-theme h1,
+.batman-theme h2 {
+  color: var(--bat-yellow);
+}
+
+/* Gotham blue for smaller elements */
+.batman-theme h3,
+.batman-theme h4,
+.batman-theme p,
+.batman-theme span {
+  color: #4aa3ff;
+}
+
+/* Flicker animation */
+.batman-theme h1,
+.batman-theme h2,
+.batman-theme h3,
+.batman-theme h4,
+.batman-theme p,
+.batman-theme span {
   animation: batFlicker 4s infinite steps(50);
-  position: relative;
+}
+
+/* Manual flicker trigger */
+.batman-theme .flicker-text {
+  animation: batFlicker 4s infinite steps(50);
   text-shadow:
     0 0 6px currentColor,
     0 0 12px currentColor,
@@ -95,81 +149,63 @@ h1, h2, h3, h4, .comic-font {
     0 0 28px currentColor;
 }
 
+/* Randomized delays */
+.batman-theme h1:nth-of-type(1),
+.batman-theme h2:nth-of-type(1),
+.batman-theme h3:nth-of-type(1),
+.batman-theme h4:nth-of-type(1),
+.batman-theme p:nth-of-type(1),
+.batman-theme span:nth-of-type(1) { animation-delay: -0.3s; }
 
-h1, h2 {
-  color: var(--bat-yellow);
-}
+.batman-theme h1:nth-of-type(2),
+.batman-theme h2:nth-of-type(2),
+.batman-theme h3:nth-of-type(2),
+.batman-theme h4:nth-of-type(2),
+.batman-theme p:nth-of-type(2),
+.batman-theme span:nth-of-type(2) { animation-delay: -1.4s; }
 
-h1.flicker-text, h2.flicker-text {
-  text-shadow:
-    0 0 8px var(--bat-yellow),
-    0 0 16px var(--bat-yellow),
-    0 0 24px var(--bat-yellow),
-    0 0 40px var(--bat-yellow);
-}
+.batman-theme h1:nth-of-type(3),
+.batman-theme h2:nth-of-type(3),
+.batman-theme h3:nth-of-type(3),
+.batman-theme h4:nth-of-type(3),
+.batman-theme p:nth-of-type(3),
+.batman-theme span:nth-of-type(3) { animation-delay: -2.8s; }
 
-h3, h4, p, span {
-  color: #4aa3ff; /* Gotham blue */
-}
+.batman-theme h1:nth-of-type(4),
+.batman-theme h2:nth-of-type(4),
+.batman-theme h3:nth-of-type(4),
+.batman-theme h4:nth-of-type(4),
+.batman-theme p:nth-of-type(4),
+.batman-theme span:nth-of-type(4) { animation-delay: -0.9s; }
 
-h3.flicker-text,
-h4.flicker-text,
-p.flicker-text,
-span.flicker-text {
-  text-shadow:
-    0 0 8px #4aa3ff,
-    0 0 14px #4aa3ff,
-    0 0 22px #4aa3ff,
-    0 0 38px #4aa3ff;
-}
+.batman-theme h1:nth-of-type(5),
+.batman-theme h2:nth-of-type(5),
+.batman-theme h3:nth-of-type(5),
+.batman-theme h4:nth-of-type(5),
+.batman-theme p:nth-of-type(5),
+.batman-theme span:nth-of-type(5) { animation-delay: -3.5s; }
 
-
-h1, h2, h3, h4, p, span {
-  animation: batFlicker 4s infinite steps(50);
-  position: relative;
-}
-
-h1, h2, h3, h4 {
-  font-family: 'Black Ops One', sans-serif !important;
-}
-
-
-
-/* Randomized delays applied automatically */
-h1:nth-of-type(1), h2:nth-of-type(1), h3:nth-of-type(1), h4:nth-of-type(1),
-p:nth-of-type(1), span:nth-of-type(1) { animation-delay: -0.3s; }
-
-h1:nth-of-type(2), h2:nth-of-type(2), h3:nth-of-type(2), h4:nth-of-type(2),
-p:nth-of-type(2), span:nth-of-type(2) { animation-delay: -1.4s; }
-
-h1:nth-of-type(3), h2:nth-of-type(3), h3:nth-of-type(3), h4:nth-of-type(3),
-p:nth-of-type(3), span:nth-of-type(3) { animation-delay: -2.8s; }
-
-h1:nth-of-type(4), h2:nth-of-type(4), h3:nth-of-type(4), h4:nth-of-type(4),
-p:nth-of-type(4), span:nth-of-type(4) { animation-delay: -0.9s; }
-
-h1:nth-of-type(5), h2:nth-of-type(5), h3:nth-of-type(5), h4:nth-of-type(5),
-p:nth-of-type(5), span:nth-of-type(5) { animation-delay: -3.5s; }
-/* Batflicker end */
 
 
 /* --------------------------------------------- */
-/*             Custom Scrollbar (Batman)         */
+/*           Custom Scrollbar (Batman)           */
 /* --------------------------------------------- */
 
-::-webkit-scrollbar {
+.batman-theme::-webkit-scrollbar {
   width: 10px;
 }
-::-webkit-scrollbar-track {
+.batman-theme::-webkit-scrollbar-track {
   background: #000;
 }
-::-webkit-scrollbar-thumb {
+.batman-theme::-webkit-scrollbar-thumb {
   background: var(--bat-yellow);
   border: 2px solid #000;
 }
 
+
+
 /* --------------------------------------------- */
-/*            Original Custom Animations         */
+/*             Original Animations               */
 /* --------------------------------------------- */
 
 @keyframes float {
@@ -207,42 +243,6 @@ p:nth-of-type(5), span:nth-of-type(5) { animation-delay: -3.5s; }
   }
 }
 
-/* Animation utility classes */
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-gentle-bob {
-  animation: gentleBob 4s ease-in-out infinite;
-}
-
-
-
-/* Spotlight/glow animation */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-
-  /* Radial glow */
-  background: radial-gradient(
-    circle at 0% 50%,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.05) 35%,
-    rgba(0, 0, 0, 0) 70%
-  );
-
-  /* Make it big so movement is smooth */
-  width: 200%;
-  height: 200%;
-
-  animation: bat-spotlight 10s ease-in-out infinite;
-  transform: translate(-50%, -50%);
-  z-index: 0;
-}
-
-/* Move the glow horizontally across the screen */
 @keyframes bat-spotlight {
   0% {
     transform: translate(-70%, -50%) rotate(-5deg) scale(1.1);
@@ -255,16 +255,6 @@ body::before {
   }
 }
 
-/* Make sure your actual content is above the glow */
-body * {
-  position: relative;
-  z-index: 1;
-         }
-
-
-
-
-/* Random Gotham Light Flicker Animation */
 @keyframes batFlicker {
   0%   { opacity: 1; filter: brightness(1); }
   5%   { opacity: 0.4; filter: brightness(0.7); }
@@ -283,9 +273,4 @@ body * {
   73%  { opacity: 1; }
   90%  { opacity: 0.8; }
   100% { opacity: 1; }
-}
-
-/* Apply to headings */
-.flicker-text {
-  animation: batFlicker 4s infinite steps(50);
-}
+         }
