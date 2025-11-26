@@ -1,32 +1,25 @@
-/* --------------------------------------------- */
-/*                Tailwind Import                */
-/* --------------------------------------------- */
-/* Google Fonts (must be before Tailwind!) */
+/* ================================================
+   GOOGLE FONTS (must be before Tailwind)
+   ================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@500;700&display=swap');
 
-/* Tailwind import */
+/* Tailwind */
 @import "tailwindcss";
 
-
-
-/* --------------------------------------------- */
-/*                Global Variables               */
-/* --------------------------------------------- */
-
+/* ================================================
+   THEME VARIABLES
+   ================================================ */
 :root {
-  /* Original light mode */
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Batman theme palette */
   --bat-bg: #121212;
   --bat-card: #1E1E1E;
   --bat-yellow: #FFD700;
-  --bat-blue: #2C3E50;
+  --bat-blue: #4aa3ff;
   --bat-gray: #7F8C8D;
   --bat-white: #ECF0F1;
 
-  /* Tailwind theme vars */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -45,27 +38,18 @@
   }
 }
 
-
-
-/* --------------------------------------------- */
-/*                GLOBAL BASE STYLES             */
-/* --------------------------------------------- */
-
+/* ================================================
+   GLOBAL
+   ================================================ */
 body {
   font-family: var(--font-sans);
   background: var(--background);
   color: var(--foreground);
 }
 
-
-
-/* --------------------------------------------- */
-/*                BATMAN THEME                   */
-/* --------------------------------------------- */
-/* Apply these ONLY inside a wrapper:
-   <div class="batman-theme"> ... </div>
-*/
-
+/* ================================================
+   BATMAN THEME WRAPPER
+   ================================================ */
 .batman-theme {
   background-color: var(--bat-bg);
   background-image:
@@ -78,12 +62,10 @@ body {
   font-family: 'Rajdhani', sans-serif;
   position: relative;
   overflow-x: hidden;
-  z-index: 0; /* <-- FIX */
+  z-index: 1;
 }
 
-
-
-/* Batman glow spotlight */
+/* Spotlight glow */
 .batman-theme::before {
   content: "";
   position: fixed;
@@ -91,18 +73,20 @@ body {
   pointer-events: none;
   background: radial-gradient(
     circle at 0% 50%,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.05) 35%,
-    rgba(0, 0, 0, 0) 70%
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(0, 0, 0, 0) 75%
   );
   width: 200%;
   height: 200%;
   animation: bat-spotlight 10s ease-in-out infinite;
   transform: translate(-50%, -50%);
-  z-index: 0;
+  z-index: 1;
 }
 
-/* Headings in Batman theme */
+/* ================================================
+   TEXT STYLES
+   ================================================ */
 .batman-theme h1,
 .batman-theme h2,
 .batman-theme h3,
@@ -112,370 +96,211 @@ body {
   letter-spacing: 2px;
 }
 
-/* Yellow for main headings */
+/* Headings yellow */
 .batman-theme h1,
 .batman-theme h2 {
   color: var(--bat-yellow);
 }
 
-/* Gotham blue for smaller elements */
+/* Smaller text blue */
 .batman-theme h3,
 .batman-theme h4,
 .batman-theme p,
 .batman-theme span {
-  color: #4aa3ff;
+  color: var(--bat-blue);
 }
 
-/* Flicker animation */
+/* Flicker effect */
 .batman-theme h1,
 .batman-theme h2,
 .batman-theme h3,
-.batman-theme h4,
 .batman-theme p,
 .batman-theme span {
-  animation: batFlicker 4s infinite steps(50);
+  animation: batFlicker 4s infinite steps(60);
+  filter: drop-shadow(0 0 6px currentColor);
 }
 
-/* Manual flicker trigger */
-.batman-theme .flicker-text {
-  animation: batFlicker 4s infinite steps(50);
-  text-shadow:
-    0 0 6px currentColor,
-    0 0 12px currentColor,
-    0 0 20px currentColor,
-    0 0 28px currentColor;
-}
-
-/* Randomized delays */
-.batman-theme h1:nth-of-type(1),
-.batman-theme h2:nth-of-type(1),
-.batman-theme h3:nth-of-type(1),
-.batman-theme h4:nth-of-type(1),
-.batman-theme p:nth-of-type(1),
-.batman-theme span:nth-of-type(1) { animation-delay: -0.3s; }
-
-.batman-theme h1:nth-of-type(2),
-.batman-theme h2:nth-of-type(2),
-.batman-theme h3:nth-of-type(2),
-.batman-theme h4:nth-of-type(2),
-.batman-theme p:nth-of-type(2),
-.batman-theme span:nth-of-type(2) { animation-delay: -1.4s; }
-
-.batman-theme h1:nth-of-type(3),
-.batman-theme h2:nth-of-type(3),
-.batman-theme h3:nth-of-type(3),
-.batman-theme h4:nth-of-type(3),
-.batman-theme p:nth-of-type(3),
-.batman-theme span:nth-of-type(3) { animation-delay: -2.8s; }
-
-.batman-theme h1:nth-of-type(4),
-.batman-theme h2:nth-of-type(4),
-.batman-theme h3:nth-of-type(4),
-.batman-theme h4:nth-of-type(4),
-.batman-theme p:nth-of-type(4),
-.batman-theme span:nth-of-type(4) { animation-delay: -0.9s; }
-
-.batman-theme h1:nth-of-type(5),
-.batman-theme h2:nth-of-type(5),
-.batman-theme h3:nth-of-type(5),
-.batman-theme h4:nth-of-type(5),
-.batman-theme p:nth-of-type(5),
-.batman-theme span:nth-of-type(5) { animation-delay: -3.5s; }
-
-
-
-
-
-
-/* --------------------------------------------- */
-/*           Custom Scrollbar (Batman)           */
-/* --------------------------------------------- */
-
-.batman-theme::-webkit-scrollbar {
-  width: 10px;
-}
-.batman-theme::-webkit-scrollbar-track {
-  background: #000;
-}
+/* ================================================
+   CUSTOM SCROLLBAR
+   ================================================ */
+.batman-theme::-webkit-scrollbar { width: 10px; }
+.batman-theme::-webkit-scrollbar-track { background: #000; }
 .batman-theme::-webkit-scrollbar-thumb {
   background: var(--bat-yellow);
   border: 2px solid #000;
 }
 
-
-
-/* --------------------------------------------- */
-/*             Original Animations               */
-/* --------------------------------------------- */
-
-@keyframes float {
-  0%, 100% { 
-    transform: translate(-50%, -50%) translateY(0px) rotate(0deg); 
-  }
-  25% { 
-    transform: translate(-50%, -50%) translateY(-8px) rotate(2deg); 
-  }
-  50% { 
-    transform: translate(-50%, -50%) translateY(-15px) rotate(-1deg); 
-  }
-  75% { 
-    transform: translate(-50%, -50%) translateY(-5px) rotate(1deg); 
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.15;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 0.25;
-  }
-}
-
-@keyframes gentleBob {
-  0%, 100% { 
-    transform: translate(-50%, -50%) translateY(0px) scale(1); 
-  }
-  50% { 
-    transform: translate(-50%, -50%) translateY(-12px) scale(1.05); 
-  }
-}
-
+/* ================================================
+   ANIMATIONS
+   ================================================ */
 @keyframes bat-spotlight {
-  0% {
-    transform: translate(-70%, -50%) rotate(-5deg) scale(1.1);
-  }
-  50% {
-    transform: translate(-30%, -50%) rotate(3deg) scale(1.2);
-  }
-  100% {
-    transform: translate(-70%, -50%) rotate(-5deg) scale(1.1);
-  }
+  0% { transform: translate(-70%, -50%) rotate(-5deg) scale(1.1); }
+  50% { transform: translate(-30%, -50%) rotate(3deg) scale(1.2); }
+  100% { transform: translate(-70%, -50%) rotate(-5deg) scale(1.1); }
 }
 
 @keyframes batFlicker {
-  0%   { opacity: 1; filter: brightness(1); }
-  5%   { opacity: 0.4; filter: brightness(0.7); }
-  7%   { opacity: 1; filter: brightness(1.1); }
-  10%  { opacity: 0.2; filter: brightness(0.5); }
-  11%  { opacity: 0.9; filter: brightness(1); }
-  14%  { opacity: 0.5; filter: brightness(0.8); }
-  20%  { opacity: 1; filter: brightness(1.2); }
-  25%  { opacity: 0.3; filter: brightness(0.6); }
-  26%  { opacity: 1; filter: brightness(1); }
-  35%  { opacity: 0.7; }
-  40%  { opacity: 1; }
-  55%  { opacity: 0.6; }
-  57%  { opacity: 1; }
-  72%  { opacity: 0.4; }
-  73%  { opacity: 1; }
-  90%  { opacity: 0.8; }
+  0% { opacity: 1; }
+  5% { opacity: 0.4; }
+  7% { opacity: 1; }
+  10% { opacity: 0.2; }
+  12% { opacity: 1; }
+  20% { opacity: 0.6; }
+  25% { opacity: 1; }
+  35% { opacity: 0.5; }
+  40% { opacity: 1; }
+  60% { opacity: 0.7; }
+  80% { opacity: 1; }
   100% { opacity: 1; }
-         }
+}
 
-
-
-
-
-
-
+@keyframes crtScan {
+  0% { opacity: 0.22; }
+  50% { opacity: 0.35; }
+  100% { opacity: 0.22; }
+}
 
 /* ============================================================
-    MOVIES MANAGER — WAYNETECH INTENSE UI
+     MOVIES MANAGER — FIXED & FULLY VISIBLE VFX
    ============================================================ */
-
 .batman-theme .movies-manager-screen {
   background:
-    linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.85)),
+    linear-gradient(rgba(0,0,0,0.80), rgba(0,0,0,0.92)),
     url('/bat-grid.png');
   background-size: contain;
   background-attachment: fixed;
   position: relative;
+  z-index: 20 !important;   /* ABOVE spotlight */
   overflow-x: hidden;
 }
 
-/* --- SCANLINE CRT EFFECT --- */
+/* CRT Scanlines — NOW VISIBLE */
 .batman-theme .movies-manager-screen::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
+  z-index: 99999 !important;
+
   background: repeating-linear-gradient(
     to bottom,
-    rgba(255,255,255,0.03) 0px,
-    rgba(255,255,255,0.03) 2px,
+    rgba(255,255,255,0.12) 0px,
+    rgba(255,255,255,0.12) 2px,
     rgba(0,0,0,0) 4px
   );
-  mix-blend-mode: overlay;
-  animation: crtScan 12s linear infinite;
-  z-index: 0;
+
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  animation: crtScan 5s linear infinite;
 }
 
-@keyframes crtScan {
-  0% { opacity: 0.2; }
-  50% { opacity: 0.35; }
-  100% { opacity: 0.2; }
-}
-
-
-/* ============================================================
-    HEADER — GOTHAM COMMAND CENTER
-   ============================================================ */
-
+/* Header Title Glow */
 .batman-theme .movies-manager-screen h1 {
   text-shadow:
     0 0 12px #FFD700,
     0 0 24px #FFD700,
     0 0 40px #000,
     0 0 60px #FFD700;
-  animation: titlePulse 3s infinite ease-in-out;
 }
 
-@keyframes titlePulse {
-  0%,100% { filter: brightness(1); }
-  50% { filter: brightness(1.5); }
-}
-
-/* "SYSTEM_EXIT" glowing hover */
+/* Glowing hover */
 .batman-theme .movies-manager-screen button:hover {
-  text-shadow: 0 0 10px #FFD700;
+  text-shadow: 0 0 12px #FFD700;
 }
 
-
-/* ============================================================
-    CONTROL PANEL — METAL FRAME + SCREWS
-   ============================================================ */
-
+/* CONTROL PANEL — Visible glow */
 .batman-theme .movies-manager-screen .control-panel {
   background: #0a0a0a;
   border: 2px solid #333;
   position: relative;
   box-shadow:
-    inset 0 0 30px rgba(255,215,0,0.1),
+    inset 0 0 25px rgba(255,215,0,0.20),
     0 0 25px rgba(255,215,0,0.25);
   animation: panelGlow 4s ease-in-out infinite;
 }
 
 @keyframes panelGlow {
-  0%, 100% { box-shadow: inset 0 0 15px rgba(255,215,0,0.1); }
-  50% { box-shadow: inset 0 0 35px rgba(255,215,0,0.25); }
+  0%,100% { box-shadow: inset 0 0 15px rgba(255,215,0,0.15); }
+  50% { box-shadow: inset 0 0 35px rgba(255,215,0,0.35); }
 }
 
-/* Stylish metallic screws */
+/* Screws */
 .batman-theme .movies-manager-screen .bolt {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: #444;
   border: 2px solid #111;
   border-radius: 50%;
 }
 
-
-/* ============================================================
-    INPUTS — TERMINAL MODE
-   ============================================================ */
-
+/* INPUTS */
 .batman-theme .movies-manager-screen input {
   background: #000;
   border: 2px solid #333;
-  color: #FFD700;
+  color: var(--bat-yellow);
   letter-spacing: 0.1em;
-  box-shadow: 0 0 8px transparent;
   transition: all 0.3s ease-out;
 }
 
 .batman-theme .movies-manager-screen input:focus {
   border-color: #FFD700;
-  box-shadow: 0 0 14px rgba(255, 215, 0, 0.3);
-  outline: none;
+  box-shadow: 0 0 18px rgba(255,215,0,0.35);
 }
 
-
-/* ============================================================
-    FILTER PANEL — WAYNETECH MODULES
-   ============================================================ */
-
+/* FILTER PANEL */
 .batman-theme .movies-manager-screen .filter-panel {
   background: #050505;
   border: 1px solid #333;
   box-shadow:
-    inset 0 0 20px rgba(255,215,0,0.05),
-    0 0 20px rgba(0,0,0,0.7);
-  position: relative;
+    inset 0 0 25px rgba(255,215,0,0.08),
+    0 0 25px rgba(0,0,0,0.75);
 }
 
-
-/* ============================================================
-    GRID POSTERS — DARK KNIGHT FILE ARCHIVE
-   ============================================================ */
-
+/* POSTERS */
 .batman-theme .movies-manager-screen .poster-card {
   transition: all 0.25s ease-out;
-  transform: translateY(0px);
 }
 
 .batman-theme .movies-manager-screen .poster-card:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 0 25px rgba(255,215,0,0.35);
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 0 25px rgba(255,215,0,0.4);
 }
 
-/* Poster Year Badge */
+/* YEAR BADGE */
 .batman-theme .movies-manager-screen .year-badge {
   background: #FFD700;
   border: 2px solid #000;
   text-shadow: 0 0 5px black;
-  animation: badgePulse 2s infinite;
 }
 
-@keyframes badgePulse {
-  0%,100% { filter: brightness(1); }
-  50% { filter: brightness(1.25); }
-}
-
-
-/* ============================================================
-    LOADING STATE — DECRYPTION TERMINAL
-   ============================================================ */
-
+/* LOADING */
 .batman-theme .movies-manager-screen .decrypting-text {
   color: #FFD700;
-  text-shadow: 0 0 10px #FFD700;
+  text-shadow: 0 0 12px #FFD700;
   animation: decryptPulse 1.5s infinite;
 }
 
 @keyframes decryptPulse {
-  0%, 100% { opacity: 0.6; }
+  0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
 
-
-/* ============================================================
-    MODAL — ULTRA SECURE LOCKED VAULT
-   ============================================================ */
-
+/* MODAL */
 .batman-theme .movies-manager-screen .modal-bg {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(5px);
 }
 
 .batman-theme .movies-manager-screen .modal-content {
   border: 2px solid #FFD700;
   background: #0a0a0a;
   box-shadow:
-    0 0 25px rgba(255,215,0,0.25),
-    inset 0 0 35px rgba(255,215,0,0.05);
-  animation: vaultGlow 3s infinite;
+    0 0 35px rgba(255,215,0,0.35),
+    inset 0 0 40px rgba(255,215,0,0.08);
 }
 
-@keyframes vaultGlow {
-  0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.2); }
-  50% { box-shadow: 0 0 35px rgba(255,215,0,0.4); }
-}
-
-
-
+/* Evidence text */
 .evidence {
   color: #FF1818 !important;
-}
+  }
+  
