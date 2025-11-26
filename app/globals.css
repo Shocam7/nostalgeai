@@ -182,7 +182,10 @@ body {
 .batman-theme p:nth-of-type(5),
 .batman-theme span:nth-of-type(5) { animation-delay: -3.5s; }
 
-
+/* FOLDER NAME COLOR IN POPUP */
+.evidence {
+  color: #39FF14;
+}
 
 /* --------------------------------------------- */
 /*           Custom Scrollbar (Batman)           */
