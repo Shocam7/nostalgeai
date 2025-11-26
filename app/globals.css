@@ -1,10 +1,11 @@
 /* --------------------------------------------- */
 /*                Tailwind Import                */
 /* --------------------------------------------- */
-@import "tailwindcss";
+/* Google Fonts (must be before Tailwind!) */
+@import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@500;700&display=swap');
 
-/* Google Fonts - must be the first thing in the file */
-@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@500;700&family=Black+Ops+One&display=swap');
+/* Tailwind import */
+@import "tailwindcss";
 
 
 
@@ -126,6 +127,10 @@ span.flicker-text {
 h1, h2, h3, h4, p, span {
   animation: batFlicker 4s infinite steps(50);
   position: relative;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Black Ops One', sans-serif !important;
 }
 
 
