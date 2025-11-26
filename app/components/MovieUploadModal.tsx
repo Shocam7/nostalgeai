@@ -1,8 +1,8 @@
 // components/MovieUploadModal.tsx
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Film, Save } from "lucide-react";
-import { CartoonButton } from "./CartoonUI";
+import { X, Upload, Save, FileVideo } from "lucide-react";
+import { BatButton } from "./CartoonUI";
 import { supabase } from "@/lib/supabaseClient";
 import { TMDBMovie } from "@/lib/types";
 
@@ -27,9 +27,8 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    // Validate size (max 50MB for example)
     if (selected.size > 50 * 1024 * 1024) {
-      setError("File too big! Keep it under 50MB.");
+      setError("FILE SIZE EXCEEDS PROTOCOL LIMIT (50MB).");
       return;
     }
 
@@ -42,7 +41,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     if (videoRef.current) {
       const duration = videoRef.current.duration;
       if (duration < 3 || duration > 10) {
-        setError("Clips must be between 3 and 10 seconds!");
+        setError("CLIP LENGTH INVALID. MUST BE 3-10 SECONDS.");
         setFile(null);
         setPreview(null);
       }
@@ -50,12 +49,12 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
   };
 
   const handleSave = async () => {
-    if (!file) return setError("Please choose a file!");
+    if (!file) return setError("NO FOOTAGE DETECTED.");
     setLoading(true);
     setError("");
 
     try {
-      // 1. Check if Memory exists, else create it
+      // Logic identical to previous version, just styled differently
       const { data: existingMemories } = await supabase
         .from("memory_movies")
         .select("id, folder, title")
@@ -67,22 +66,14 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       let memoryTitle = existingMemories?.title || movie.title;
 
       if (!memoryId) {
-        // Create generic memory
         const { data: newMemory, error: memError } = await supabase
           .from("memories")
-          .insert({
-            class_id: "movies",
-            title: movie.title,
-            notes: movie.overview,
-          })
-          .select()
-          .single();
-
+          .insert({ class_id: "movies", title: movie.title, notes: movie.overview })
+          .select().single();
         if (memError) throw memError;
         memoryId = newMemory.id;
         folderName = movie.title.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-        // Create movie specific memory
         const { error: movieError } = await supabase.from("memory_movies").insert({
           id: memoryId,
           title: movie.title,
@@ -91,46 +82,37 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
           popularity: movie.popularity,
           poster_img: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
           languages: [movie.original_language],
-          region: "US", // Defaulting for now
-          cast_members: [], // Would fetch credits in a real full app
+          region: "US",
+          cast_members: [],
         });
-
         if (movieError) throw movieError;
       }
 
-      // 2. Upload to Backblaze via API Route
       const formData = new FormData();
       formData.append("file", file);
       formData.append("memoryId", memoryId);
 
-      const uploadRes = await fetch("/api/b2/upload", {
-        method: "POST",
-        body: formData,
-      });
-
+      const uploadRes = await fetch("/api/b2/upload", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
       if (!uploadData.success) throw new Error(uploadData.error || "Upload failed");
 
-      // 3. Insert Clip Record
       const { error: clipError } = await supabase.from("memory_clips").insert({
         memory_id: memoryId,
         memory_title: memoryTitle,
         memory_folder: folderName,
-        clip_url: uploadData.key, // Key returned from B2
+        clip_url: uploadData.key,
         description: description,
         people: people ? { names: people.split(",").map((s) => s.trim()) } : null,
       });
 
       if (clipError) throw clipError;
-
-      // 4. Update memory count
-      await supabase.rpc('increment_clips_count', { row_id: memoryId }); // Optional: if you have an RPC
+      await supabase.rpc('increment_clips_count', { row_id: memoryId });
 
       setLoading(false);
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Something went wrong!");
+      setError(err.message || "SYSTEM MALFUNCTION.");
       setLoading(false);
     }
   };
@@ -143,107 +125,111 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
       >
         <motion.div
-          initial={{ scale: 0.5, y: 100 }}
+          initial={{ scale: 0.8, y: 50 }}
           animate={{ scale: 1, y: 0 }}
-          className="bg-[#FFF4E0] w-full max-w-lg rounded-3xl border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(255,144,232,1)] overflow-hidden max-h-[90vh] overflow-y-auto"
+          className="bg-[#121212] w-full max-w-lg border-2 border-[#FFD700] shadow-[0_0_30px_rgba(255,215,0,0.2)] overflow-hidden flex flex-col max-h-[90vh]"
         >
-          {/* Header */}
-          <div className="bg-[#FF90E8] p-4 border-b-4 border-black flex justify-between items-center">
-            <h2 className="text-2xl font-black text-black uppercase tracking-tighter">
-              Add Clip: {movie.title}
+          {/* Bat-Header */}
+          <div className="bg-[#FFD700] p-3 flex justify-between items-center">
+            <h2 className="text-xl font-black text-black font-['Bangers'] tracking-widest uppercase">
+              NEW EVIDENCE ENTRY: {movie.title}
             </h2>
-            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full">
-              <X size={28} strokeWidth={3} />
+            <button onClick={onClose} className="p-1 hover:bg-black/10 rounded-full">
+              <X size={24} color="black" strokeWidth={3} />
             </button>
           </div>
 
-          <div className="p-6 space-y-4">
-            {/* Movie Info */}
-            <div className="flex gap-4 items-start bg-white p-3 rounded-xl border-2 border-black border-dashed">
+          <div className="p-6 overflow-y-auto space-y-5 text-gray-300">
+            
+            {/* Movie Details */}
+            <div className="flex gap-4 items-start bg-[#1E1E1E] p-3 border-l-4 border-[#FFD700]">
               <img
                 src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
                 alt="Poster"
-                className="rounded-lg border-2 border-black"
+                className="w-16 h-auto border border-gray-600"
               />
               <div>
-                <p className="font-bold text-lg leading-tight">{movie.title}</p>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{movie.overview}</p>
+                <p className="font-bold text-[#FFD700] uppercase text-sm">Target Subject</p>
+                <p className="font-bold text-lg leading-tight text-white">{movie.title}</p>
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2 font-mono">{movie.overview}</p>
               </div>
             </div>
 
-            {/* File Upload */}
+            {/* Upload Zone */}
             <div className="space-y-2">
-              <label className="block font-bold text-lg">🎥 Upload Clip</label>
-              <div className="border-4 border-black border-dashed rounded-xl bg-blue-50 p-6 text-center hover:bg-blue-100 transition-colors cursor-pointer relative">
+              <label className="block text-[#FFD700] text-xs font-bold uppercase tracking-widest">Footage Source</label>
+              <div className="border-2 border-dashed border-gray-600 bg-black p-6 text-center hover:border-[#FFD700] transition-colors cursor-pointer relative group">
                 <input
                   type="file"
                   accept="video/*,image/*"
                   onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
                 />
                 {!preview ? (
-                  <div className="flex flex-col items-center gap-2 text-gray-500">
-                    <Upload size={40} />
-                    <span className="font-bold">Tap to upload (3-10s video)</span>
+                  <div className="flex flex-col items-center gap-2 text-gray-500 group-hover:text-[#FFD700]">
+                    <FileVideo size={40} />
+                    <span className="font-mono text-sm">UPLOAD SURVEILLANCE CLIP (3-10s)</span>
                   </div>
                 ) : (
-                  <div className="relative">
+                  <div className="relative z-0">
                     {file?.type.startsWith("video") ? (
                       <video
                         ref={videoRef}
                         src={preview}
                         controls
                         onLoadedMetadata={validateDuration}
-                        className="w-full rounded-lg border-2 border-black"
+                        className="w-full border border-[#333]"
                       />
                     ) : (
-                      <img src={preview} alt="Preview" className="w-full rounded-lg border-2 border-black" />
+                      <img src={preview} alt="Preview" className="w-full border border-[#333]" />
                     )}
-                    <p className="text-xs font-bold mt-2 text-green-600">{file?.name}</p>
+                    <p className="text-xs font-mono mt-2 text-[#FFD700]">{file?.name}</p>
                   </div>
                 )}
               </div>
-              {error && <p className="text-red-600 font-bold animate-pulse">{error}</p>}
+              {error && <p className="text-red-500 font-mono text-xs animate-pulse">:: ERROR: {error} ::</p>}
             </div>
 
             {/* Inputs */}
-            <div className="space-y-2">
-              <label className="block font-bold">📝 Description</label>
-              <textarea
-                className="w-full border-4 border-black rounded-xl p-3 focus:outline-none focus:ring-4 focus:ring-[#23A6F0]"
-                rows={2}
-                placeholder="What happened in this scene?"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-[#FFD700] text-xs font-bold uppercase tracking-widest">Incident Report</label>
+                <textarea
+                  className="w-full bg-black border border-gray-600 p-3 text-white focus:border-[#FFD700] focus:outline-none font-mono text-sm"
+                  rows={2}
+                  placeholder="Describe the event..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="block font-bold">👥 People (comma separated)</label>
-              <input
-                type="text"
-                className="w-full border-4 border-black rounded-xl p-3 focus:outline-none focus:ring-4 focus:ring-[#23A6F0]"
-                placeholder="Batman, Joker, Robin..."
-                value={people}
-                onChange={(e) => setPeople(e.target.value)}
-              />
+              <div className="space-y-1">
+                <label className="block text-[#FFD700] text-xs font-bold uppercase tracking-widest">Identified Individuals</label>
+                <input
+                  type="text"
+                  className="w-full bg-black border border-gray-600 p-3 text-white focus:border-[#FFD700] focus:outline-none font-mono text-sm"
+                  placeholder="e.g. Joker, Penguin..."
+                  value={people}
+                  onChange={(e) => setPeople(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-4 bg-gray-100 border-t-4 border-black flex gap-3">
-            <CartoonButton variant="danger" onClick={onClose} className="flex-1">
-              Cancel
-            </CartoonButton>
-            <CartoonButton variant="success" onClick={handleSave} loading={loading} className="flex-1">
-              <Save size={20} /> Save Memory
-            </CartoonButton>
+          <div className="p-4 bg-[#111] border-t border-[#333] flex gap-3">
+            <BatButton variant="danger" onClick={onClose} className="flex-1 text-sm">
+              ABORT
+            </BatButton>
+            <BatButton variant="primary" onClick={handleSave} loading={loading} className="flex-1 text-sm">
+              <Save size={16} /> ARCHIVE DATA
+            </BatButton>
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
-          }
+        }
