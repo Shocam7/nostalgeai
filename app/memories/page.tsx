@@ -45,7 +45,7 @@ export default function MemoriesPage() {
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-yellow-500/10 blur-3xl rounded-full" />
         
         <h1 className="text-6xl md:text-9xl text-[#FFD700] drop-shadow-[5px_5px_0px_#000] tracking-wider z-10 relative">
-          BAT-MEMORY
+          BAT-ARCHIVE
         </h1>
         <p className="text-xl md:text-2xl mt-2 text-gray-400 font-['Rajdhani'] uppercase tracking-[0.5em] border-t border-gray-700 pt-2">
           Wayne Enterprises Secure Storage
