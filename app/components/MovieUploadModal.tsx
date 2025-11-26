@@ -134,7 +134,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
         >
           {/* Bat-Header */}
           <div className="bg-[#FFD700] p-3 flex justify-between items-center">
-            <h2 className="text-xl font-black text-black font-['Bangers'] tracking-widest uppercase">
+            <h2 className="evidence text-xl font-black text-black font-['Bangers'] tracking-widest uppercase">
               NEW EVIDENCE ENTRY: {movie.title}
             </h2>
             <button onClick={onClose} className="p-1 hover:bg-black/10 rounded-full">
