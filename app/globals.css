@@ -48,19 +48,32 @@
 /* --------------------------------------------- */
 
 body {
-  /* Using Bat theme background */
-  background-color: var(--bat-bg);
-  background-image: radial-gradient(#2a2a2a 1px, transparent 1px);
-  background-size: 20px 20px;
+  /* Replace solid color with your public image */
+  background-color: var(--bat-bg); /* fallback */
 
-  /* Text color from Bat theme */
+  /* Layered background: Batman image + comic dots */
+  background-image:
+    radial-gradient(#2a2a2a 1px, transparent 1px),
+    url("/batman.jpeg");
+
+  /* Dot pattern */
+  background-size:
+    20px 20px, /* dots */
+    cover;     /* image */
+
+  background-position:
+    0 0,
+    center;
+
+  background-repeat:
+    repeat,
+    no-repeat;
+
   color: var(--bat-white);
-
-  /* Comic font for UI */
   font-family: 'Rajdhani', sans-serif;
-
   overflow-x: hidden;
 }
+
 
 /* Comic Font Headings */
 h1, h2, h3, h4, .comic-font {
