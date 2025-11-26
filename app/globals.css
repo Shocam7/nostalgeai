@@ -5,6 +5,8 @@
 
 /* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap');
+
 
 /* --------------------------------------------- */
 /*                Global Variables               */
@@ -77,9 +79,23 @@ body {
 
 /* Comic Font Headings */
 h1, h2, h3, h4, .comic-font {
-  font-family: 'Bangers', cursive;
+  font-family: 'Black Ops One', sans-serif;
   letter-spacing: 2px;
 }
+
+/* Batflicker */
+h1, h2, h3, h4 {
+  animation: batFlicker 4s infinite steps(50);
+}
+
+/* Randomized delays applied automatically */
+h1:nth-of-type(1), h2:nth-of-type(1), h3:nth-of-type(1), h4:nth-of-type(1) { animation-delay: -0.5s; }
+h1:nth-of-type(2), h2:nth-of-type(2), h3:nth-of-type(2), h4:nth-of-type(2) { animation-delay: -1.8s; }
+h1:nth-of-type(3), h2:nth-of-type(3), h3:nth-of-type(3), h4:nth-of-type(3) { animation-delay: -2.9s; }
+h1:nth-of-type(4), h2:nth-of-type(4), h3:nth-of-type(4), h4:nth-of-type(4) { animation-delay: -0.9s; }
+h1:nth-of-type(5), h2:nth-of-type(5), h3:nth-of-type(5), h4:nth-of-type(5) { animation-delay: -3.6s; }
+/* Batflicker end */
+
 
 /* --------------------------------------------- */
 /*             Custom Scrollbar (Batman)         */
@@ -189,3 +205,31 @@ body * {
   z-index: 1;
          }
 
+
+
+
+/* Random Gotham Light Flicker Animation */
+@keyframes batFlicker {
+  0%   { opacity: 1; filter: brightness(1); }
+  5%   { opacity: 0.4; filter: brightness(0.7); }
+  7%   { opacity: 1; filter: brightness(1.1); }
+  10%  { opacity: 0.2; filter: brightness(0.5); }
+  11%  { opacity: 0.9; filter: brightness(1); }
+  14%  { opacity: 0.5; filter: brightness(0.8); }
+  20%  { opacity: 1; filter: brightness(1.2); }
+  25%  { opacity: 0.3; filter: brightness(0.6); }
+  26%  { opacity: 1; filter: brightness(1); }
+  35%  { opacity: 0.7; }
+  40%  { opacity: 1; }
+  55%  { opacity: 0.6; }
+  57%  { opacity: 1; }
+  72%  { opacity: 0.4; }
+  73%  { opacity: 1; }
+  90%  { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+/* Apply to headings */
+.flicker-text {
+  animation: batFlicker 4s infinite steps(50);
+}
