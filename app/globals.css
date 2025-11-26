@@ -78,13 +78,10 @@ body {
   font-family: 'Rajdhani', sans-serif;
   position: relative;
   overflow-x: hidden;
+  z-index: 0; /* <-- FIX */
 }
 
-/* Make all content stay above glow layer */
-.batman-theme * {
-  position: relative;
-  z-index: 0;
-}
+
 
 /* Batman glow spotlight */
 .batman-theme::before {
