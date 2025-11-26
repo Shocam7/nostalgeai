@@ -82,7 +82,6 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
           popularity: movie.popularity,
           poster_img: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
           languages: [movie.original_language],
-          region: "US",
           cast_members: [],
         });
         if (movieError) throw movieError;
