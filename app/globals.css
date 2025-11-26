@@ -107,30 +107,44 @@ h1.flicker-text, h2.flicker-text {
     0 0 40px var(--bat-yellow);
 }
 
-h3, h4 {
-  color: #4aa3ff; /* Batman-tech blue */
+h3, h4, p, span {
+  color: #4aa3ff; /* Gotham blue */
 }
 
-h3.flicker-text, h4.flicker-text {
+h3.flicker-text,
+h4.flicker-text,
+p.flicker-text,
+span.flicker-text {
   text-shadow:
     0 0 8px #4aa3ff,
-    0 0 16px #4aa3ff,
-    0 0 24px #4aa3ff,
-    0 0 40px #4aa3ff;
+    0 0 14px #4aa3ff,
+    0 0 22px #4aa3ff,
+    0 0 38px #4aa3ff;
 }
 
-h1, h2, h3, h4 {
+
+h1, h2, h3, h4, p, span {
   animation: batFlicker 4s infinite steps(50);
   position: relative;
 }
 
 
+
 /* Randomized delays applied automatically */
-h1:nth-of-type(1), h2:nth-of-type(1), h3:nth-of-type(1), h4:nth-of-type(1) { animation-delay: -0.5s; }
-h1:nth-of-type(2), h2:nth-of-type(2), h3:nth-of-type(2), h4:nth-of-type(2) { animation-delay: -1.8s; }
-h1:nth-of-type(3), h2:nth-of-type(3), h3:nth-of-type(3), h4:nth-of-type(3) { animation-delay: -2.9s; }
-h1:nth-of-type(4), h2:nth-of-type(4), h3:nth-of-type(4), h4:nth-of-type(4) { animation-delay: -0.9s; }
-h1:nth-of-type(5), h2:nth-of-type(5), h3:nth-of-type(5), h4:nth-of-type(5) { animation-delay: -3.6s; }
+h1:nth-of-type(1), h2:nth-of-type(1), h3:nth-of-type(1), h4:nth-of-type(1),
+p:nth-of-type(1), span:nth-of-type(1) { animation-delay: -0.3s; }
+
+h1:nth-of-type(2), h2:nth-of-type(2), h3:nth-of-type(2), h4:nth-of-type(2),
+p:nth-of-type(2), span:nth-of-type(2) { animation-delay: -1.4s; }
+
+h1:nth-of-type(3), h2:nth-of-type(3), h3:nth-of-type(3), h4:nth-of-type(3),
+p:nth-of-type(3), span:nth-of-type(3) { animation-delay: -2.8s; }
+
+h1:nth-of-type(4), h2:nth-of-type(4), h3:nth-of-type(4), h4:nth-of-type(4),
+p:nth-of-type(4), span:nth-of-type(4) { animation-delay: -0.9s; }
+
+h1:nth-of-type(5), h2:nth-of-type(5), h3:nth-of-type(5), h4:nth-of-type(5),
+p:nth-of-type(5), span:nth-of-type(5) { animation-delay: -3.5s; }
 /* Batflicker end */
 
 
