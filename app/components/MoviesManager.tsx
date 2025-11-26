@@ -89,7 +89,7 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   }, []);
 
   return (
-    <div className="batman-theme min-h-screen p-4 pb-20 bg-[url('/bat-grid.png')] bg-fixed">
+    <div className="min-h-screen p-4 pb-20 bg-[url('/bat-grid.png')] bg-fixed">
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-8 border-b-2 border-[#333] pb-6">
         <button
