@@ -274,3 +274,202 @@ body {
   90%  { opacity: 0.8; }
   100% { opacity: 1; }
          }
+
+
+
+
+
+
+
+
+/* ============================================================
+    MOVIES MANAGER — WAYNETECH INTENSE UI
+   ============================================================ */
+
+.batman-theme .movies-manager-screen {
+  background:
+    linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.85)),
+    url('/bat-grid.png');
+  background-size: contain;
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* --- SCANLINE CRT EFFECT --- */
+.batman-theme .movies-manager-screen::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.03) 0px,
+    rgba(255,255,255,0.03) 2px,
+    rgba(0,0,0,0) 4px
+  );
+  mix-blend-mode: overlay;
+  animation: crtScan 12s linear infinite;
+  z-index: 0;
+}
+
+@keyframes crtScan {
+  0% { opacity: 0.2; }
+  50% { opacity: 0.35; }
+  100% { opacity: 0.2; }
+}
+
+
+/* ============================================================
+    HEADER — GOTHAM COMMAND CENTER
+   ============================================================ */
+
+.batman-theme .movies-manager-screen h1 {
+  text-shadow:
+    0 0 12px #FFD700,
+    0 0 24px #FFD700,
+    0 0 40px #000,
+    0 0 60px #FFD700;
+  animation: titlePulse 3s infinite ease-in-out;
+}
+
+@keyframes titlePulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+}
+
+/* "SYSTEM_EXIT" glowing hover */
+.batman-theme .movies-manager-screen button:hover {
+  text-shadow: 0 0 10px #FFD700;
+}
+
+
+/* ============================================================
+    CONTROL PANEL — METAL FRAME + SCREWS
+   ============================================================ */
+
+.batman-theme .movies-manager-screen .control-panel {
+  background: #0a0a0a;
+  border: 2px solid #333;
+  position: relative;
+  box-shadow:
+    inset 0 0 30px rgba(255,215,0,0.1),
+    0 0 25px rgba(255,215,0,0.25);
+  animation: panelGlow 4s ease-in-out infinite;
+}
+
+@keyframes panelGlow {
+  0%, 100% { box-shadow: inset 0 0 15px rgba(255,215,0,0.1); }
+  50% { box-shadow: inset 0 0 35px rgba(255,215,0,0.25); }
+}
+
+/* Stylish metallic screws */
+.batman-theme .movies-manager-screen .bolt {
+  width: 6px;
+  height: 6px;
+  background: #444;
+  border: 2px solid #111;
+  border-radius: 50%;
+}
+
+
+/* ============================================================
+    INPUTS — TERMINAL MODE
+   ============================================================ */
+
+.batman-theme .movies-manager-screen input {
+  background: #000;
+  border: 2px solid #333;
+  color: #FFD700;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 8px transparent;
+  transition: all 0.3s ease-out;
+}
+
+.batman-theme .movies-manager-screen input:focus {
+  border-color: #FFD700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.3);
+  outline: none;
+}
+
+
+/* ============================================================
+    FILTER PANEL — WAYNETECH MODULES
+   ============================================================ */
+
+.batman-theme .movies-manager-screen .filter-panel {
+  background: #050505;
+  border: 1px solid #333;
+  box-shadow:
+    inset 0 0 20px rgba(255,215,0,0.05),
+    0 0 20px rgba(0,0,0,0.7);
+  position: relative;
+}
+
+
+/* ============================================================
+    GRID POSTERS — DARK KNIGHT FILE ARCHIVE
+   ============================================================ */
+
+.batman-theme .movies-manager-screen .poster-card {
+  transition: all 0.25s ease-out;
+  transform: translateY(0px);
+}
+
+.batman-theme .movies-manager-screen .poster-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 25px rgba(255,215,0,0.35);
+}
+
+/* Poster Year Badge */
+.batman-theme .movies-manager-screen .year-badge {
+  background: #FFD700;
+  border: 2px solid #000;
+  text-shadow: 0 0 5px black;
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+
+
+/* ============================================================
+    LOADING STATE — DECRYPTION TERMINAL
+   ============================================================ */
+
+.batman-theme .movies-manager-screen .decrypting-text {
+  color: #FFD700;
+  text-shadow: 0 0 10px #FFD700;
+  animation: decryptPulse 1.5s infinite;
+}
+
+@keyframes decryptPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+
+/* ============================================================
+    MODAL — ULTRA SECURE LOCKED VAULT
+   ============================================================ */
+
+.batman-theme .movies-manager-screen .modal-bg {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.batman-theme .movies-manager-screen .modal-content {
+  border: 2px solid #FFD700;
+  background: #0a0a0a;
+  box-shadow:
+    0 0 25px rgba(255,215,0,0.25),
+    inset 0 0 35px rgba(255,215,0,0.05);
+  animation: vaultGlow 3s infinite;
+}
+
+@keyframes vaultGlow {
+  0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.2); }
+  50% { box-shadow: 0 0 35px rgba(255,215,0,0.4); }
+}
