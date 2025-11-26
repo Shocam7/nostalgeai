@@ -84,9 +84,46 @@ h1, h2, h3, h4, .comic-font {
 }
 
 /* Batflicker */
+.flicker-text {
+  animation: batFlicker 4s infinite steps(50);
+  position: relative;
+  text-shadow:
+    0 0 6px currentColor,
+    0 0 12px currentColor,
+    0 0 20px currentColor,
+    0 0 28px currentColor;
+}
+
+
+h1, h2 {
+  color: var(--bat-yellow);
+}
+
+h1.flicker-text, h2.flicker-text {
+  text-shadow:
+    0 0 8px var(--bat-yellow),
+    0 0 16px var(--bat-yellow),
+    0 0 24px var(--bat-yellow),
+    0 0 40px var(--bat-yellow);
+}
+
+h3, h4 {
+  color: #4aa3ff; /* Batman-tech blue */
+}
+
+h3.flicker-text, h4.flicker-text {
+  text-shadow:
+    0 0 8px #4aa3ff,
+    0 0 16px #4aa3ff,
+    0 0 24px #4aa3ff,
+    0 0 40px #4aa3ff;
+}
+
 h1, h2, h3, h4 {
   animation: batFlicker 4s infinite steps(50);
+  position: relative;
 }
+
 
 /* Randomized delays applied automatically */
 h1:nth-of-type(1), h2:nth-of-type(1), h3:nth-of-type(1), h4:nth-of-type(1) { animation-delay: -0.5s; }
