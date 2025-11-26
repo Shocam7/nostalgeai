@@ -33,7 +33,7 @@ export default function MemoriesPage() {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-12 max-w-7xl mx-auto flex flex-col items-center">
+  <div className="batman-theme min-h-screen p-6 md:p-12 max-w-7xl mx-auto flex flex-col items-center">
       
       {/* Header Title */}
       <motion.div 
