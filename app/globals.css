@@ -83,7 +83,7 @@ body {
 /* Make all content stay above glow layer */
 .batman-theme * {
   position: relative;
-  z-index: 1;
+  z-index: 0;
 }
 
 /* Batman glow spotlight */
