@@ -182,10 +182,10 @@ body {
 .batman-theme p:nth-of-type(5),
 .batman-theme span:nth-of-type(5) { animation-delay: -3.5s; }
 
-/* FOLDER NAME COLOR IN POPUP */
-.evidence {
-  color: #39FF14;
-}
+
+
+
+
 
 /* --------------------------------------------- */
 /*           Custom Scrollbar (Batman)           */
@@ -472,4 +472,10 @@ body {
 @keyframes vaultGlow {
   0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.2); }
   50% { box-shadow: 0 0 35px rgba(255,215,0,0.4); }
+}
+
+
+
+.evidence {
+  color: #39FF14 !important;
 }
