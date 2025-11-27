@@ -90,6 +90,8 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       const formData = new FormData();
       formData.append("file", file);
       formData.append("memoryId", memoryId);
+      formData.append("folderName", `movies/${folderName}`);
+
 
       const uploadRes = await fetch("/api/b2/upload", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
