@@ -18,6 +18,7 @@ export async function POST(req: Request) {
 
     const file = form.get("file") as File | null;
     const memoryId = form.get("memoryId") as string | null;
+    const folderName = form.get("folderName") as string | null; // NEW
 
     if (!file || !memoryId) {
       return Response.json(
@@ -26,14 +27,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Extract extension from uploaded file safely
+    if (!folderName) {
+      return Response.json(
+        { error: "Missing folderName" },
+        { status: 400 }
+      );
+    }
+
+    // Extract file extension cleanly
     const name = file.name || "";
     const ext = name.includes(".") ? name.split(".").pop() : "bin";
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Final key saved in Backblaze
-    const key = `${memoryId}/${crypto.randomUUID()}.${ext}`;
+    // FINAL KEY — perfect structure:
+    // movies/prem-ratan-dhan-payo/27db1a93-3b28-4acf-b6c1.mp4
+    const key = `${folderName}/${crypto.randomUUID()}.${ext}`;
 
     const uploadResult = await b2.send(
       new PutObjectCommand({
@@ -58,4 +67,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+       }
