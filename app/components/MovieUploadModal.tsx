@@ -1,9 +1,9 @@
-// components/MovieUploadModal.tsx
+// app/components/MovieUploadModal.tsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, FileVideo, Zap, Loader2 } from "lucide-react"; [cite_start]// [cite: 2]
+import { X, Save, FileVideo, Zap, Loader2 } from "lucide-react"; 
 import { BatButton } from "./CartoonUI";
-import { supabase } from "@/lib/supabaseClient"; [cite_start]// [cite: 3]
+import { supabase } from "@/lib/supabaseClient";
 import { TMDBMovie } from "@/lib/types";
 
 interface Props {
@@ -34,7 +34,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Timer logic for the loader display
+  // Timer logic for the loader display (Feature 3 & 6)
   useEffect(() => {
     if (generating) {
       const startTime = Date.now();
@@ -76,6 +76,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     }
   };
 
+  // Logic for generating description and individuals (Features 1-7)
   const handleGenerate = async () => {
     if (!file) {
       setError("UPLOAD FOOTAGE BEFORE ANALYSIS.");
@@ -90,6 +91,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     formData.append("file", file);
 
     try {
+      // Hits the Next.js API route that handles Gemini
       const response = await fetch("/api/analyze-evidence", {
         method: "POST",
         body: formData,
@@ -99,9 +101,12 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
 
       if (!response.ok) throw new Error(data.error || "Analysis Failed");
 
+      // Fill input boxes (Feature 2 & 7)
       setDescription(data.description);
       // Remove any trailing commas or empty spaces
       setPeople(data.individuals.replace(/^,|,$/g, '').trim()); 
+      
+      // Display model stats (Feature 6)
       setGenStats({
         model: data.model,
         time: data.duration
@@ -121,6 +126,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     setError("");
 
     try {
+      // Logic identical to previous version, just styled differently
       const { data: existingMemories } = await supabase
         .from("memory_movies")
         .select("id, folder, title")
@@ -264,7 +270,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
                 <div className="flex justify-between items-end mb-1">
                   <label className="block text-[#FFD700] text-xs font-bold uppercase tracking-widest">Incident Report</label>
                   
-                  {/* GENERATE BUTTON */}
+                  {/* GENERATE BUTTON (Feature 1 & 3) */}
                   {file && (
                     <button
                       onClick={handleGenerate}
@@ -288,15 +294,15 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
 
                 <textarea
                   className="w-full bg-black border border-gray-600 p-3 text-white focus:border-[#FFD700] focus:outline-none font-mono text-sm"
-                  rows={4}
+                  rows={4} // Increased rows for better description display
                   placeholder="Describe the event..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
                 
-                {/* GEN STATS BOX */}
+                {/* GEN STATS BOX (Feature 6) */}
                 {genStats && (
-                  <div className="w-full bg-[#1E1E1E] border border-gray-600 p-1 px-2 mt-1">
+                  <div className="w-full bg-black border border-gray-600 p-1 px-2 mt-1">
                     <p className="text-[10px] text-gray-400 font-mono flex justify-between uppercase">
                       <span>Model: {genStats.model}</span>
                       <span>Latency: {genStats.time} s</span>
@@ -331,4 +337,4 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       </motion.div>
     </AnimatePresence>
   );
-}
+          }
