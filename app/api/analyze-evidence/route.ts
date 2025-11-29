@@ -1,13 +1,9 @@
 // app/api/analyze-evidence/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
+import { Client } from "@google/generative-ai";
 import fs from "fs/promises";
-import path from "path";
 import os from "os";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-const fileManager = new GoogleAIFileManager(process.env.GOOGLE_API_KEY!);
+import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,75 +14,74 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // ✅ Convert file to Buffer safely (NO STREAMING BUGS)
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Convert to Buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Write to temp dir
+    // Write to temp path
     const tempPath = path.join(os.tmpdir(), `${Date.now()}-${file.name}`);
     await fs.writeFile(tempPath, buffer);
 
-    const start = Date.now();
-    let usedModel = "gemini-2.5-flash";
+    const client = new Client({ apiKey: process.env.GOOGLE_API_KEY! });
 
     // Upload to Gemini
-    const upload = await fileManager.uploadFile(tempPath, {
+    let fileObj = await client.files.upload(tempPath, {
       mimeType: file.type,
       displayName: file.name
     });
 
-    let fileUri = upload.file.uri;
-    let fileName = upload.file.name;
-    let state = upload.file.state;
-
-    // Poll processing status
-    while (state === FileState.PROCESSING) {
+    // Poll for processing
+    while (fileObj.state === "PROCESSING") {
       await new Promise((r) => setTimeout(r, 1500));
-      const updated = await fileManager.getFile(fileName);
-      state = updated.state;
-      if (state === FileState.FAILED) {
-        throw new Error("Gemini failed to process file.");
+      fileObj = await client.files.get(fileObj.name);
+      if (fileObj.state === "FAILED") {
+        throw new Error("File processing failed.");
       }
     }
 
-    const prompt = `### ROLE
+    const prompt = `
+### ROLE
 You are a Precision Video Logger.
 
 ### TASK
-Analyze the video clip and output a SINGLE string of text (40-75 words)...
+Analyze the video clip and output a SINGLE string of text...
 
 ### EXTRACTION RULE
-After the description block, create a new line and output: "||INDIVIDUALS||: " followed by names.`;
+After the description block, output:
+"||INDIVIDUALS||: " + comma separated names.
+`;
 
+    const start = Date.now();
+    let usedModel = "gemini-2.5-flash";
 
-    // Try main model
-    let outputText = "";
+    let finalText = "";
+
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const result = await model.generateContent([
-        { fileData: { mimeType: file.type, fileUri } },
-        { text: prompt }
-      ]);
-      outputText = result.response.text();
+      for await (const chunk of client.models.generateContentStream({
+        model: usedModel,
+        contents: [fileObj, prompt]
+      })) {
+        if (chunk.text) finalText += chunk.text;
+      }
     } catch (e) {
+      // fallback to flash-lite
       usedModel = "gemini-2.5-flash-lite";
-      const model = genAI.getGenerativeModel({ model: usedModel });
-      const result = await model.generateContent([
-        { fileData: { mimeType: file.type, fileUri } },
-        { text: prompt }
-      ]);
-      outputText = result.response.text();
+      for await (const chunk of client.models.generateContentStream({
+        model: usedModel,
+        contents: [fileObj, prompt]
+      })) {
+        if (chunk.text) finalText += chunk.text;
+      }
     }
 
-    // Cleanup
+    // Cleanup temp file
     await fs.unlink(tempPath);
 
     const duration = ((Date.now() - start) / 1000).toFixed(3);
 
-    // Parsing
-    const parts = outputText.split("||INDIVIDUALS||:");
+    // Parse output
+    const parts = finalText.split("||INDIVIDUALS||:");
     const description = parts[0].trim();
-    const individuals = (parts[1] || "").trim();
+    const individuals = parts[1]?.trim() || "";
 
     return NextResponse.json({
       description,
@@ -95,8 +90,8 @@ After the description block, create a new line and output: "||INDIVIDUALS||: " f
       duration
     });
 
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (e: any) {
+    console.error("ERROR:", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
-      }
+}
