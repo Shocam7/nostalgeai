@@ -1,9 +1,8 @@
-// app/components/MovieUploadModal.tsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, FileVideo, Zap, Loader2 } from "lucide-react"; 
 import { BatButton } from "./CartoonUI";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient"; 
 import { TMDBMovie } from "@/lib/types";
 
 interface Props {
@@ -34,7 +33,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Timer logic for the loader display (Feature 3 & 6)
+  // Timer logic for the loader display
   useEffect(() => {
     if (generating) {
       const startTime = Date.now();
@@ -52,6 +51,8 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    
+    // Strict 50MB Limit [cite: 44]
     if (selected.size > 50 * 1024 * 1024) {
       setError("FILE SIZE EXCEEDS PROTOCOL LIMIT (50MB).");
       return;
@@ -60,7 +61,6 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     setFile(selected);
     setPreview(URL.createObjectURL(selected));
     setError("");
-    // Reset generation stats on new file
     setGenStats(null);
     setTimer(0);
   };
@@ -68,6 +68,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
   const validateDuration = () => {
     if (videoRef.current) {
       const duration = videoRef.current.duration;
+      // Duration Guardrail [cite: 47]
       if (duration < 3 || duration > 10) {
         setError("CLIP LENGTH INVALID. MUST BE 3-10 SECONDS.");
         setFile(null);
@@ -76,13 +77,12 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     }
   };
 
-  // Logic for generating description and individuals (Features 1-7)
   const handleGenerate = async () => {
     if (!file) {
       setError("UPLOAD FOOTAGE BEFORE ANALYSIS.");
       return;
     }
-    
+
     setGenerating(true);
     setError("");
     setGenStats(null);
@@ -91,30 +91,26 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     formData.append("file", file);
 
     try {
-      // Hits the Next.js API route that handles Gemini
       const response = await fetch("/api/analyze-evidence", {
         method: "POST",
         body: formData,
       });
-
+      
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Analysis Failed");
 
-      // Fill input boxes (Feature 2 & 7)
       setDescription(data.description);
-      // Remove any trailing commas or empty spaces
-      setPeople(data.individuals.replace(/^,|,$/g, '').trim()); 
+      // Clean up individuals string [cite: 52]
+      setPeople(data.individuals ? data.individuals.replace(/^,|,$/g, '').trim() : "");
       
-      // Display model stats (Feature 6)
       setGenStats({
         model: data.model,
         time: data.duration
       });
-
     } catch (err: any) {
       console.error(err);
-      setError("AI ANALYSIS FAILED: " + err.message);
+      setError("AI ANALYSIS FAILED: " + (err.message || "Unknown Error"));
     } finally {
       setGenerating(false);
     }
@@ -126,26 +122,27 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
     setError("");
 
     try {
-      // Logic identical to previous version, just styled differently
+      // Check existing memories [cite: 57]
       const { data: existingMemories } = await supabase
         .from("memory_movies")
         .select("id, folder, title")
         .eq("title", movie.title)
         .single();
-        
+
       let memoryId = existingMemories?.id;
       let folderName = existingMemories?.folder;
       let memoryTitle = existingMemories?.title || movie.title;
-      
+
       if (!memoryId) {
         const { data: newMemory, error: memError } = await supabase
           .from("memories")
           .insert({ class_id: "movies", title: movie.title, notes: movie.overview })
           .select().single();
+
         if (memError) throw memError;
         memoryId = newMemory.id;
         folderName = movie.title.toLowerCase().replace(/[^a-z0-9]/g, "-");
-        
+
         const { error: movieError } = await supabase.from("memory_movies").insert({
           id: memoryId,
           title: movie.title,
@@ -167,7 +164,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       const uploadRes = await fetch("/api/b2/upload", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
       if (!uploadData.success) throw new Error(uploadData.error || "Upload failed");
-      
+
       const { error: clipError } = await supabase.from("memory_clips").insert({
         memory_id: memoryId,
         memory_title: memoryTitle,
@@ -176,6 +173,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
         description: description,
         people: people ? { names: people.split(",").map((s) => s.trim()) } : null,
       });
+
       if (clipError) throw clipError;
       await supabase.rpc('increment_clips_count', { row_id: memoryId });
 
@@ -214,7 +212,6 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
           </div>
 
           <div className="p-6 overflow-y-auto space-y-5 text-gray-300">
-            
             {/* Movie Details */}
             <div className="flex gap-4 items-start bg-[#1E1E1E] p-3 border-l-4 border-[#FFD700]">
               <img
@@ -270,7 +267,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
                 <div className="flex justify-between items-end mb-1">
                   <label className="block text-[#FFD700] text-xs font-bold uppercase tracking-widest">Incident Report</label>
                   
-                  {/* GENERATE BUTTON (Feature 1 & 3) */}
+                  {/* GENERATE BUTTON */}
                   {file && (
                     <button
                       onClick={handleGenerate}
@@ -294,15 +291,15 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
 
                 <textarea
                   className="w-full bg-black border border-gray-600 p-3 text-white focus:border-[#FFD700] focus:outline-none font-mono text-sm"
-                  rows={4} // Increased rows for better description display
+                  rows={4}
                   placeholder="Describe the event..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
                 
-                {/* GEN STATS BOX (Feature 6) */}
+                {/* GEN STATS BOX */}
                 {genStats && (
-                  <div className="w-full bg-black border border-gray-600 p-1 px-2 mt-1">
+                  <div className="w-full bg-[#1E1E1E] border border-gray-600 p-1 px-2 mt-1">
                     <p className="text-[10px] text-gray-400 font-mono flex justify-between uppercase">
                       <span>Model: {genStats.model}</span>
                       <span>Latency: {genStats.time} s</span>
@@ -337,4 +334,4 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       </motion.div>
     </AnimatePresence>
   );
-          }
+    }
