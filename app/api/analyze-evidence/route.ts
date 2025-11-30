@@ -41,15 +41,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // VALIDATION: Ensure uploadResult.name exists to satisfy TypeScript
+    if (!uploadResult.name) {
+       throw new Error("Upload failed: GenAI did not return a file name.");
+    }
+
     // 3. Poll for processing (Crucial for video files)
     let fileState = uploadResult.state;
-    let currentFile = uploadResult;
+    // We can interpret the result as 'any' or a specific File type if needed for the initial assignment
+    let currentFile: any = uploadResult; 
 
     // We loop while state is PROCESSING 
     while (fileState === "PROCESSING") {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       
       // Fetch fresh status using the new SDK
+      // Now safe because we checked uploadResult.name above
       currentFile = await ai.files.get({ name: uploadResult.name });
       fileState = currentFile.state;
       
