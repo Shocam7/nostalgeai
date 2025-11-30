@@ -175,7 +175,7 @@ export default function MovieUploadModal({ movie, isOpen, onClose, onSuccess }: 
       });
 
       if (clipError) throw clipError;
-      await supabase.rpc('increment_clips_count', { row_id: memoryId });
+      await supabase.rpc('increment_clips_count', { memory_id: memoryId });
 
       setLoading(false);
       onSuccess();
