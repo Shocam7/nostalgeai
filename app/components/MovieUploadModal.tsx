@@ -1,3 +1,5 @@
+// app/components/MovieUploadModal.tsx
+
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, FileVideo, Zap, Loader2 } from "lucide-react"; 
