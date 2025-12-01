@@ -303,3 +303,12 @@ body {
 .evidence {
   color: #FF1818 !important;
 }
+
+
+
+
+/* DISABLE CRT + Spotlight during smoke transition */
+.smoke-active .movies-manager-screen::after,
+.smoke-active .batman-theme::before {
+  display: none !important;
+}
