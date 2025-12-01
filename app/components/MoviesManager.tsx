@@ -32,6 +32,48 @@ const languages = [
   { value: "ko", label: "Korean" },
 ];
 
+
+
+
+
+function rankMovies(searchTerm: string, movies: TMDBMovie[]) {
+  const q = searchTerm.toLowerCase();
+
+  return movies
+    .map(m => {
+      const title = m.title?.toLowerCase() || "";
+
+      let score = 0;
+
+      // 1. Exact match (highest)
+      if (title === q) score += 10000;
+
+      // 2. Starts with search term
+      if (title.startsWith(q)) score += 5000;
+
+      // 3. Word boundary match: "thor" matches "thor: ragnarok"
+      if (title.split(/[^a-z0-9]+/).includes(q)) score += 3000;
+
+      // 4. Contains anywhere
+      if (title.includes(q)) score += 1000;
+
+      // 5. Add popularity (small weight)
+      score += (m.popularity || 0);
+
+      return { ...m, _score: score };
+    })
+    .sort((a, b) => b._score - a._score);
+}
+
+
+
+
+
+
+
+
+
+
 export default function MoviesManager({ onBack }: { onBack: () => void }) {
   const [movies, setMovies] = useState<TMDBMovie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +116,9 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
     try {
       const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(search)}`);
       const data = await res.json();
-      setMovies(data.results || []);
+      setMovies(rankMovies(search, data.results || []));
       setCurrentPage(1);
+
     } catch (err) {
       console.error(err);
       setMovies([]);
