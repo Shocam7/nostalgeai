@@ -32,16 +32,19 @@ const languages = [
   { value: "ko", label: "Korean" },
 ];
 
-
-
-
-
+/**
+ * Defensive local ranking (fallback)
+ * Used only if you ever want a local ranking layer.
+ * It gives strong weight to exact/starts-with/word-boundary matches,
+ * and adds a small popularity component.
+ */
 function rankMovies(searchTerm: string, movies: TMDBMovie[]) {
-  const q = searchTerm.toLowerCase();
+  if (!searchTerm) return movies;
+  const q = searchTerm.toLowerCase().trim();
 
   return movies
-    .map(m => {
-      const title = m.title?.toLowerCase() || "";
+    .map((m) => {
+      const title = (m.title || "").toLowerCase();
 
       let score = 0;
 
@@ -62,17 +65,8 @@ function rankMovies(searchTerm: string, movies: TMDBMovie[]) {
 
       return { ...m, _score: score };
     })
-    .sort((a, b) => b._score - a._score);
+    .sort((a, b) => (b as any)._score - (a as any)._score);
 }
-
-
-
-
-
-
-
-
-
 
 export default function MoviesManager({ onBack }: { onBack: () => void }) {
   const [movies, setMovies] = useState<TMDBMovie[]>([]);
@@ -93,13 +87,14 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const transitionTimeout = useRef<number | null>(null);
 
-  // Fetch functions
+  // Fetch functions (these endpoints should return merged & scored results)
   const fetchTrending = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/tmdb/trending");
       const data = await res.json();
-      setMovies(data.results || []);
+      const incoming = data?.results ?? [];
+      setMovies(incoming);
       setCurrentPage(1); // reset pagination
     } catch (e) {
       console.error(e);
@@ -116,9 +111,18 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
     try {
       const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(search)}`);
       const data = await res.json();
-      setMovies(rankMovies(search, data.results || []));
-      setCurrentPage(1);
+      const incoming = data?.results ?? [];
 
+      // Server returns relevance-heavy sorted list (preferred). But keep defensive fallback:
+      // If server returns many items that look unsorted, we can apply local rankMovies fallback.
+      if (incoming.length > 0) {
+        setMovies(incoming);
+      } else {
+        // fallback: rank locally if server empty
+        setMovies(rankMovies(search, incoming));
+      }
+
+      setCurrentPage(1);
     } catch (err) {
       console.error(err);
       setMovies([]);
@@ -137,7 +141,8 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
 
       const res = await fetch(`/api/tmdb/filter?${params.toString()}`);
       const data = await res.json();
-      setMovies(data.results || []);
+      const incoming = data?.results ?? [];
+      setMovies(incoming);
       setCurrentPage(1);
     } catch (err) {
       console.error(err);
@@ -155,58 +160,43 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
     };
   }, []);
 
-  // SORT BY POPULARITY (default) -- memoized for perf
-  const sortedMovies = useMemo(() => {
-    return [...movies].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-  }, [movies]);
+  // FRONTEND: respect server ordering (server returns merged + scored results)
+  const orderedMovies = useMemo(() => movies || [], [movies]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedMovies.length / moviesPerPage));
+  const totalPages = Math.max(1, Math.ceil(orderedMovies.length / moviesPerPage));
   const indexOfLast = currentPage * moviesPerPage;
   const indexOfFirst = indexOfLast - moviesPerPage;
-  const currentMovies = sortedMovies.slice(indexOfFirst, indexOfLast);
+  const currentMovies = orderedMovies.slice(indexOfFirst, indexOfLast);
 
   // Transition helper: full-screen smoke burst, then update page
   const triggerPageChangeWithSmoke = (nextPage: number) => {
-    // if already on that page, do nothing
     if (nextPage === currentPage) return;
 
-    // start transition overlay
+    // begin transition (overlay)
     setIsTransitioning(true);
 
-    // after a short delay, change the page so new items will fade in with smoke clearing
-    // timings tuned to be cinematic:
-    // - smoke builds for 450ms, then we switch page at 450ms
-    // - overlay finishes fade at 1200ms
     if (transitionTimeout.current) window.clearTimeout(transitionTimeout.current);
 
+    // cinematic timings
     transitionTimeout.current = window.setTimeout(() => {
       setCurrentPage(nextPage);
-      // finish transition after a bit more
       transitionTimeout.current = window.setTimeout(() => {
         setIsTransitioning(false);
       }, 750);
     }, 450);
   };
 
-  // Bat (Nolan-style) SVG — simplified, sharp silhouette
+  // Nolan-style bat SVG
   const NolanBatSVG = ({ size = 36 }: { size?: number }) => (
     <svg viewBox="0 0 64 32" width={size} height={(size * 32) / 64} fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path
-        d="M2 20c6-6 12-8 20-8 2 0 4-2 6-4s3-4 6-4 4 2 6 4 4 4 6 4c8 0 14 2 20 8-8 0-12-4-20-4-2 0-4 2-6 4s-3 4-6 4-4-2-6-4-4-4-6-4C14 16 10 20 2 20z"
-        fill="#000"
-      />
+      <path d="M2 20c6-6 12-8 20-8 2 0 4-2 6-4s3-4 6-4 4 2 6 4 4 4 6 4c8 0 14 2 20 8-8 0-12-4-20-4-2 0-4 2-6 4s-3 4-6 4-4-2-6-4-4-4-6-4C14 16 10 20 2 20z" fill="#000" />
       <ellipse cx="32" cy="16" rx="30" ry="12" fill="#FFD700" opacity="0.95" />
-      <path
-        d="M6 20c6-6 12-8 20-8 2 0 4-2 6-4s3-4 6-4 4 2 6 4 4 4 6 4c8 0 14 2 20 8-8 0-12-4-20-4-2 0-4 2-6 4s-3 4-6 4-4-2-6-4-4-4-6-4C14 16 10 20 6 20z"
-        fill="#000"
-        opacity="0.95"
-      />
+      <path d="M6 20c6-6 12-8 20-8 2 0 4-2 6-4s3-4 6-4 4 2 6 4 4 4 6 4c8 0 14 2 20 8-8 0-12-4-20-4-2 0-4 2-6 4s-3 4-6 4-4-2-6-4-4-4-6-4C14 16 10 20 6 20z" fill="#000" opacity="0.95" />
     </svg>
   );
 
   return (
     <div className="batman-theme movies-manager-screen min-h-screen p-4 pb-20 relative">
-
       {/* FULL-SCREEN SMOKE OVERLAY (AnimatePresence + motion) */}
       <AnimatePresence>
         {isTransitioning && (
@@ -234,16 +224,21 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
                 }}
                 className="absolute inset-0"
               />
-              {/* big blurred smoke */}
-              <div className="absolute -top-20 -left-20 w-[140vw] h-[140vh] opacity-95 blur-[36px] mix-blend-multiply"
-                   style={{
-                     background: "radial-gradient(circle at 30% 40%, rgba(0,0,0,0.9), rgba(0,0,0,0.95) 30%, rgba(255,215,0,0.04) 60%)"
-                   }}
+              {/* big blurred smoke - left */}
+              <div
+                className="absolute -top-20 -left-20 w-[140vw] h-[140vh] opacity-95 blur-[36px] mix-blend-multiply"
+                style={{
+                  background:
+                    "radial-gradient(circle at 30% 40%, rgba(0,0,0,0.9), rgba(0,0,0,0.95) 30%, rgba(255,215,0,0.04) 60%)",
+                }}
               />
-              <div className="absolute -bottom-10 -right-10 w-[100vw] h-[90vh] opacity-90 blur-[48px]"
-                   style={{
-                     background: "radial-gradient(circle at 80% 70%, rgba(0,0,0,0.95), rgba(255,215,0,0.02))"
-                   }}
+              {/* big blurred smoke - right */}
+              <div
+                className="absolute -bottom-10 -right-10 w-[100vw] h-[90vh] opacity-90 blur-[48px]"
+                style={{
+                  background:
+                    "radial-gradient(circle at 80% 70%, rgba(0,0,0,0.95), rgba(255,215,0,0.02))",
+                }}
               />
             </motion.div>
 
@@ -266,24 +261,17 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-8 border-b-2 border-[#333] pb-6 control-panel">
         {/* Back Button */}
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 font-black text-[#FFD700] hover:text-white transition-colors"
-        >
+        <button onClick={onBack} className="flex items-center gap-2 font-black text-[#FFD700] hover:text-white transition-colors">
           <ArrowLeft size={28} /> SYSTEM_EXIT
         </button>
 
         {/* Title */}
         <div className="text-center">
-          <h1 className="text-5xl md:text-7xl drop-shadow-[4px_4px_0px_#000]">
-            GOTHAM ARCHIVES
-          </h1>
-          <p className="text-gray-400 font-['Rajdhani'] tracking-[0.3em]">
-            SECURE DATABASE ACCESS // LEVEL 9
-          </p>
+          <h1 className="text-5xl md:text-7xl drop-shadow-[4px_4px_0px_#000]">GOTHAM ARCHIVES</h1>
+          <p className="text-gray-400 font-['Rajdhani'] tracking-[0.3em]">SECURE DATABASE ACCESS // LEVEL 9</p>
         </div>
 
-        <div className="w-10"></div> {/* Spacer */}
+        <div className="w-10" />
       </div>
 
       {/* CONTROL PANEL */}
@@ -339,7 +327,7 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
       ) : (
         <>
           <motion.div
-            key={`grid-page-${currentPage}-${movies.length}`}
+            key={`grid-page-${currentPage}-${orderedMovies.length}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -383,7 +371,6 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
               className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
             >
               <div className="w-14 h-8 flex items-center justify-center">
-                {/* Nolan-style bat as black silhouette on yellow oval */}
                 <NolanBatSVG size={42} />
               </div>
               <span className="hidden md:inline-block text-sm">PREV</span>
@@ -422,5 +409,5 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
       )}
     </div>
   );
-  }
-    
+    }
+              
