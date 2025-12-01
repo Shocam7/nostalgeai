@@ -170,7 +170,7 @@ body {
   background-size: contain;
   background-attachment: fixed;
   position: relative;
-  z-index: 20 !important;   /* ABOVE spotlight */
+  z-index: 20;   /* ABOVE spotlight */
   overflow-x: hidden;
 }
 
