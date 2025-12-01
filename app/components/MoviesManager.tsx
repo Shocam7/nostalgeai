@@ -196,8 +196,12 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <div className="batman-theme movies-manager-screen min-h-screen p-4 pb-20 relative">
-      {/* FULL-SCREEN SMOKE OVERLAY (AnimatePresence + motion) */}
+    <div
+  className={`batman-theme movies-manager-screen min-h-screen p-4 pb-20 relative ${
+    isTransitioning ? "smoke-active" : ""
+  }`}
+>
+ {/* FULL-SCREEN SMOKE OVERLAY (AnimatePresence + motion) */}
       <AnimatePresence>
         {isTransitioning && (
           <motion.div
