@@ -83,10 +83,7 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   const [currentPage, setCurrentPage] = useState(1);
   const moviesPerPage = 20;
 
-  // Transition overlay
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitionTimeout = useRef<number | null>(null);
-
+  
   // Fetch functions (these endpoints should return merged & scored results)
   const fetchTrending = async () => {
     setLoading(true);
@@ -154,10 +151,6 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     fetchTrending();
-    // cleanup transition timeout on unmount
-    return () => {
-      if (transitionTimeout.current) window.clearTimeout(transitionTimeout.current);
-    };
   }, []);
 
   // FRONTEND: respect server ordering (server returns merged + scored results)
@@ -167,24 +160,6 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   const indexOfLast = currentPage * moviesPerPage;
   const indexOfFirst = indexOfLast - moviesPerPage;
   const currentMovies = orderedMovies.slice(indexOfFirst, indexOfLast);
-
-  // Transition helper: full-screen smoke burst, then update page
-  const triggerPageChangeWithSmoke = (nextPage: number) => {
-    if (nextPage === currentPage) return;
-
-    // begin transition (overlay)
-    setIsTransitioning(true);
-
-    if (transitionTimeout.current) window.clearTimeout(transitionTimeout.current);
-
-    // cinematic timings
-    transitionTimeout.current = window.setTimeout(() => {
-      setCurrentPage(nextPage);
-      transitionTimeout.current = window.setTimeout(() => {
-        setIsTransitioning(false);
-      }, 750);
-    }, 450);
-  };
 
   // Nolan-style bat SVG
   const NolanBatSVG = ({ size = 36 }: { size?: number }) => (
@@ -196,71 +171,7 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <div
-  className={`batman-theme movies-manager-screen min-h-screen p-4 pb-20 relative ${
-    isTransitioning ? "smoke-active" : ""
-  }`}
->
- {/* FULL-SCREEN SMOKE OVERLAY (AnimatePresence + motion) */}
-      <AnimatePresence>
-        {isTransitioning && (
-          <motion.div
-            key="smoke-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: "easeInOut" }}
-            className="fixed inset-0 z-[99999] pointer-events-none flex items-center justify-center"
-            aria-hidden
-          >
-            {/* layered smoke shapes */}
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: [0.95, 1.02, 0.98, 1.0] }}
-              transition={{ duration: 0.9, times: [0, 0.5, 0.8, 1] }}
-              className="absolute inset-0"
-            >
-              {/* radial yellow wash */}
-              <div
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center, rgba(255,215,0,0.12) 0%, rgba(0,0,0,0.85) 40%)",
-                }}
-                className="absolute inset-0"
-              />
-              {/* big blurred smoke - left */}
-              <div
-                className="absolute -top-20 -left-20 w-[140vw] h-[140vh] opacity-95 blur-[36px] mix-blend-multiply"
-                style={{
-                  background:
-                    "radial-gradient(circle at 30% 40%, rgba(0,0,0,0.9), rgba(0,0,0,0.95) 30%, rgba(255,215,0,0.04) 60%)",
-                }}
-              />
-              {/* big blurred smoke - right */}
-              <div
-                className="absolute -bottom-10 -right-10 w-[100vw] h-[90vh] opacity-90 blur-[48px]"
-                style={{
-                  background:
-                    "radial-gradient(circle at 80% 70%, rgba(0,0,0,0.95), rgba(255,215,0,0.02))",
-                }}
-              />
-            </motion.div>
-
-            {/* Centered Quote */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.9, ease: "easeInOut" }}
-              className="relative z-[100000] text-center px-6"
-            >
-              <p className="text-2xl md:text-4xl font-black uppercase tracking-wider text-[#FFD700] drop-shadow-[0_0_12px_#000]">
-                Theatricality and deception are powerful agents.
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="batman-theme movies-manager-screen min-h-screen p-4 pb-20 relative">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-8 border-b-2 border-[#333] pb-6 control-panel">
@@ -369,8 +280,8 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
           {/* PAGINATION — Nolan Bat symbols for prev/next */}
           <div className="flex justify-center items-center gap-6 mt-10 text-white font-mono">
             <button
-              onClick={() => triggerPageChangeWithSmoke(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1 || isTransitioning}
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
               aria-label="Previous page"
               className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
             >
@@ -385,8 +296,8 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
             </div>
 
             <button
-              onClick={() => triggerPageChangeWithSmoke(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages || isTransitioning}
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}             
               aria-label="Next page"
               className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
             >
