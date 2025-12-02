@@ -277,36 +277,47 @@ export default function MoviesManager({ onBack }: { onBack: () => void }) {
             ))}
           </motion.div>
 
-          {/* PAGINATION — Nolan Bat symbols for prev/next */}
-          <div className="flex justify-center items-center gap-6 mt-10 text-white font-mono">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              aria-label="Previous page"
-              className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
-            >
-              <div className="w-14 h-8 flex items-center justify-center">
-                <NolanBatSVG size={42} />
-              </div>
-              <span className="hidden md:inline-block text-sm">PREV</span>
-            </button>
 
-            <div className="text-[#FFD700]">
-              Page {currentPage} / {totalPages}
-            </div>
+          {/* PAGINATION — Batman icon from /public */}
+<div className="flex justify-center items-center gap-6 mt-10 text-white font-mono">
+  <button
+    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+    disabled={currentPage === 1}
+    aria-label="Previous page"
+    className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
+  >
+    <div className="w-14 h-8 flex items-center justify-center">
+      <img
+        src="/batman-icon.svg"
+        alt="Batman icon"
+        className="w-[42px] h-[42px]"
+      />
+    </div>
+    <span className="hidden md:inline-block text-sm">PREV</span>
+  </button>
 
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}             
-              aria-label="Next page"
-              className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
-            >
-              <span className="hidden md:inline-block text-sm">NEXT</span>
-              <div className="w-14 h-8 flex items-center justify-center">
-                <NolanBatSVG size={42} />
-              </div>
-            </button>
-          </div>
+  <div className="text-[#FFD700]">
+    Page {currentPage} / {totalPages}
+  </div>
+
+  <button
+    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+    disabled={currentPage === totalPages}
+    aria-label="Next page"
+    className="flex items-center gap-2 p-2 rounded-md hover:scale-105 transition-transform disabled:opacity-40"
+  >
+    <span className="hidden md:inline-block text-sm">NEXT</span>
+    <div className="w-14 h-8 flex items-center justify-center">
+      <img
+        src="/batman-icon.svg"
+        alt="Batman icon"
+        className="w-[42px] h-[42px]"
+      />
+    </div>
+  </button>
+</div>
+          
+
         </>
       )}
 
