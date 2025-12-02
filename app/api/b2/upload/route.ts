@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // STEP 1 — Get existing clip count
     // -------------------------------
     const { data, error: countError } = await supabase
-      .from("memory_clips")
+      .from("memories")
       .select("clips_count")
       .eq("id", memoryId)
       .single();
